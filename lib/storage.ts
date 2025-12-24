@@ -16,8 +16,14 @@ export function saveNote(note: FormattedNote, rawInput: string): SavedNote {
 
 export function loadNotes(): SavedNote[] {
   if (typeof window === 'undefined') return [];
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    if (!data) return [];
+    const parsed = JSON.parse(data);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
 }
 
 export function deleteNote(id: string): void {

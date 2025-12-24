@@ -272,8 +272,12 @@ function FounderStory() {
       <div className="mx-auto max-w-7xl px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-5 relative">
-            <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-gradient-to-br from-[#185adc] to-purple-600 relative shadow-2xl flex items-center justify-center">
-              <div className="text-[120px]">👨‍💻</div>
+            <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative shadow-2xl">
+              <img 
+                src="/boss.png" 
+                alt="Founder talking to team" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="absolute -bottom-8 -right-8 h-24 w-24 bg-[#185adc] text-white rounded-full flex items-center justify-center text-6xl font-serif z-20 shadow-[0_0_15px_rgba(24,90,220,0.3)]">
               "

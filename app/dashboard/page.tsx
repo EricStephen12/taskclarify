@@ -21,7 +21,8 @@ export default function Dashboard() {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    setSavedNotes(loadNotes());
+    const notes = loadNotes();
+    setSavedNotes(Array.isArray(notes) ? notes : []);
   }, []);
 
   useEffect(() => {
@@ -530,8 +531,8 @@ export default function Dashboard() {
       {/* Modal */}
       {selectedNote && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setSelectedNote(null)}>
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl" onClick={e => e.stopPropagation()}>
-            <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-[#185adc]/5 to-transparent sticky top-0">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="p-6 border-b border-gray-100 bg-gradient-to-r from-[#185adc]/5 to-transparent flex-shrink-0">
               <div className="flex justify-between items-start">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
@@ -544,7 +545,7 @@ export default function Dashboard() {
               </div>
               <p className="text-sm text-[#636f88] mt-2">{selectedNote.summary}</p>
             </div>
-            <div className="p-6 overflow-y-auto max-h-[70vh] space-y-4">
+            <div className="p-6 overflow-y-auto flex-1 space-y-4">
               {selectedNote.functionalRequirements.length > 0 && (
                 <div>
                   <h4 className="text-xs font-bold text-[#636f88] uppercase mb-2">Functional Requirements</h4>
@@ -553,17 +554,73 @@ export default function Dashboard() {
                       <span className="text-xs font-mono text-[#185adc]">{r.id}</span>
                       <p className="font-medium text-[#111318]">{r.title}</p>
                       <p className="text-sm text-[#636f88]">{r.description}</p>
+                      {r.acceptanceCriteria.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          <span className="text-xs text-[#636f88]">Acceptance Criteria:</span>
+                          {r.acceptanceCriteria.map((c, i) => (
+                            <p key={i} className="text-xs text-[#111318] flex items-start gap-1"><span className="text-green-500">✓</span>{c}</p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              {selectedNote.technicalRequirements.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-[#636f88] uppercase mb-2">Technical Requirements</h4>
+                  {selectedNote.technicalRequirements.map(r => (
+                    <div key={r.id} className="p-3 bg-purple-50 rounded-lg mb-2">
+                      <span className="text-xs font-mono text-purple-600">{r.id}</span>
+                      <p className="font-medium text-purple-900">{r.title}</p>
+                      <p className="text-sm text-purple-700">{r.description}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {selectedNote.userStories.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-[#636f88] uppercase mb-2">User Stories</h4>
+                  {selectedNote.userStories.map(s => (
+                    <div key={s.id} className="p-3 bg-blue-50 rounded-lg mb-2">
+                      <span className="text-xs font-mono text-blue-600">{s.id}</span>
+                      <p className="text-sm text-blue-900">As a <strong>{s.persona}</strong>, I want to <strong>{s.action}</strong>, so that <strong>{s.benefit}</strong></p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {selectedNote.unclearPoints.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-[#636f88] uppercase mb-2">Unclear Points</h4>
+                  {selectedNote.unclearPoints.map(u => (
+                    <div key={u.id} className="p-3 bg-amber-50 rounded-lg mb-2">
+                      <span className="text-xs font-mono text-amber-600">{u.id}</span>
+                      <p className="font-medium text-amber-900">{u.issue}</p>
+                      <p className="text-sm text-amber-700"><strong>Impact:</strong> {u.impact}</p>
+                      <p className="text-sm text-amber-700"><strong>Resolution:</strong> {u.suggestedResolution}</p>
                     </div>
                   ))}
                 </div>
               )}
               {selectedNote.questionsForStakeholder.length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold text-[#636f88] uppercase mb-2">Questions</h4>
+                  <h4 className="text-xs font-bold text-[#636f88] uppercase mb-2">Questions for Stakeholder</h4>
                   {selectedNote.questionsForStakeholder.map(q => (
                     <div key={q.id} className="p-3 bg-[#185adc]/5 rounded-lg mb-2">
                       <span className="text-xs font-mono text-[#185adc]">{q.id}</span>
                       <p className="font-medium text-[#185adc]">{q.question}</p>
+                      <p className="text-sm text-[#636f88]">{q.context}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {selectedNote.risks.length > 0 && (
+                <div>
+                  <h4 className="text-xs font-bold text-[#636f88] uppercase mb-2">Risks</h4>
+                  {selectedNote.risks.map((r, i) => (
+                    <div key={i} className="p-3 bg-red-50 rounded-lg mb-2">
+                      <p className="font-medium text-red-900">{r.risk}</p>
+                      <p className="text-sm text-red-700"><strong>Mitigation:</strong> {r.mitigation}</p>
                     </div>
                   ))}
                 </div>
