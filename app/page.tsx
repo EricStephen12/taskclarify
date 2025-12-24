@@ -60,9 +60,9 @@ function Hero() {
             </div>
             
             <h1 className="text-5xl lg:text-[4rem] font-black leading-[1.1] tracking-tight text-[#111318]">
-              Stop Building the <br/>
+              Build Tasks <br/>
               <span className="text-[#185adc] relative inline-block">
-                Wrong Thing
+                Rightly
                 <svg className="absolute -bottom-2 w-full h-3 text-[#185adc]/30" preserveAspectRatio="none" viewBox="0 0 100 10">
                   <path d="M0 5 Q 50 10 100 5" fill="none" stroke="currentColor" strokeWidth="3"/>
                 </svg>
@@ -354,11 +354,6 @@ function Features() {
               icon: "📊",
               title: "Impact Analysis",
               description: "Estimates development effort and identifies dependencies for each requirement."
-            },
-            {
-              icon: "🔌",
-              title: "Tool Integration",
-              description: "Exports directly to Jira, Linear, Notion, and your favorite project management tools."
             }
           ].map((feature, index) => (
             <div key={index} className="flex flex-col bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-gray-200 transition-colors duration-200">
@@ -420,7 +415,7 @@ function Footer() {
           <div>
             <h3 className="text-white font-semibold mb-4">Product</h3>
             <ul className="space-y-3 text-sm">
-              {['Features', 'How It Works', 'Pricing', 'Integrations'].map((item, i) => (
+              {['Features', 'How It Works', 'Pricing'].map((item, i) => (
                 <li key={i}>
                   <a href="#" className="hover:text-white transition-colors">{item}</a>
                 </li>
