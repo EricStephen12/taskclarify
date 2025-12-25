@@ -12,71 +12,71 @@
     - Set up `__tests__/` folder with subfolders for API and component tests
     - _Requirements: Testing Strategy_
 
-- [ ] 2. Implement API route for Claude integration
-  - [ ] 2.1 Create the format API route
-    - Create `app/api/format/route.ts`
-    - Implement POST handler that accepts notes in request body
-    - Call Claude API with claude-sonnet-4-20250514 model
-    - Parse JSON response and return FormattedResult
-    - Handle errors and return appropriate error responses
-    - _Requirements: 5.1, 5.2, 5.3, 2.1_
-  - [ ] 2.2 Write property test for JSON parsing correctness
-    - **Property 5: JSON parsing correctness**
-    - **Validates: Requirements 5.2**
-  - [ ] 2.3 Write property test for malformed JSON error handling
-    - **Property 6: Malformed JSON error handling**
-    - **Validates: Requirements 5.3**
-  - [ ] 2.4 Write unit tests for API route
-    - Test successful response parsing
-    - Test error handling for missing notes
-    - Test error handling for API failures
-    - _Requirements: 5.1, 5.2, 5.3_
+- [ ] 2. Add Task Type interfaces and detection logic
+  - [ ] 2.1 Update TypeScript interfaces for task types
+    - Add TaskType union type to `types/index.ts`
+    - Add PersonalPlanResult interface with budget, executionSteps, constraints, checkpoints
+    - Add BudgetBreakdown, BudgetCategory, BudgetItem, ExecutionStep interfaces
+    - Update FormattedResult to be union of PersonalPlanResult | SoftwareRequirementResult
+    - _Requirements: 2.1, 4.1, 4.2, 7.2, 7.3_
+  - [ ] 2.2 Implement task type detection function
+    - Create `lib/taskTypeDetector.ts` with detectTaskType function
+    - Use keyword analysis for personal vs software detection
+    - _Requirements: 2.2, 7.1_
+  - [ ]* 2.3 Write property test for task type detection validity
+    - **Property 8: Task type detection validity**
+    - **Validates: Requirements 7.1**
 
-- [ ] 3. Checkpoint - Ensure all tests pass
+- [ ] 3. Update API route for task type support
+  - [ ] 3.1 Update format API route to accept task type
+    - Modify `app/api/format/route.ts` to accept taskType in request body
+    - Implement task type detection when taskType is "auto"
+    - Build task-type-specific prompts
+    - _Requirements: 3.1, 7.1_
+  - [ ] 3.2 Implement Personal Plan prompt and response parsing
+    - Create prompt template for personal execution plans
+    - Parse response into PersonalPlanResult format
+    - Ensure NO technical requirements in personal plan responses
+    - _Requirements: 2.4, 4.1, 4.2, 4.3, 4.4, 7.2_
+  - [ ]* 3.3 Write property test for personal plan context locking
+    - **Property 4: Personal plan context locking**
+    - **Validates: Requirements 2.4, 4.5**
+  - [ ]* 3.4 Write property test for explicit task type override
+    - **Property 3: Explicit task type override**
+    - **Validates: Requirements 2.3**
+  - [ ]* 3.5 Write property test for malformed JSON error handling
+    - **Property 9: Malformed JSON error handling**
+    - **Validates: Requirements 7.4**
+
+- [ ] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement frontend page component
-  - [ ] 4.1 Create the main page component with textarea and button
-    - Update `app/page.tsx` with centered layout
-    - Add textarea with 400px min-height and full width
-    - Add "Format with AI" button with blue-600 styling
-    - Implement state management for notes, loading, result, error
-    - _Requirements: 1.1, 1.2, 2.2, 4.1, 4.2_
-  - [ ] 4.2 Write property test for input state synchronization
+- [ ] 5. Update frontend with task type selector
+  - [ ] 5.1 Add task type selector component to dashboard
+    - Add dropdown/button group for task type selection
+    - Options: Auto-detect, Personal Plan, Software Requirement, Business Task, Marketing Campaign, Financial Planning
+    - Default to Auto-detect
+    - _Requirements: 2.1_
+  - [ ] 5.2 Update form submission to include task type
+    - Send taskType along with notes to API
+    - _Requirements: 3.1_
+  - [ ]* 5.3 Write property test for input state synchronization
     - **Property 1: Input state synchronization**
     - **Validates: Requirements 1.2**
-  - [ ] 4.3 Implement button disabled state for empty input
-    - Disable button when textarea is empty or whitespace-only
-    - _Requirements: 1.3_
-  - [ ] 4.4 Write property test for empty input disables submission
+  - [ ]* 5.4 Write property test for empty input disables submission
     - **Property 2: Empty input disables submission**
     - **Validates: Requirements 1.3**
-  - [ ] 4.5 Implement API call and loading state
-    - Call /api/format on button click
-    - Show loading state while request in progress
-    - Handle success and error responses
-    - _Requirements: 2.1, 2.2, 2.3_
-  - [ ] 4.6 Write property test for API error propagation
-    - **Property 4: API error propagation**
-    - **Validates: Requirements 2.3**
 
-- [ ] 5. Checkpoint - Ensure all tests pass
-  - Ensure all tests pass, ask the user if questions arise.
+- [ ] 6. Implement Personal Plan result renderer
+  - [ ] 6.1 Create PersonalPlanRenderer component
+    - Display budget breakdown with categories and items
+    - Display execution steps as interactive checklist
+    - Display constraints section
+    - Display risks and checkpoints
+    - _Requirements: 4.1, 4.2, 4.3, 4.4_
+  - [ ]* 6.2 Write property test for personal plan result completeness
+    - **Property 5: Personal plan result completeness**
+    - **Validates: Requirements 4.1, 4.2, 4.3, 4.4**
 
-- [ ] 6. Implement results display
-  - [ ] 6.1 Create results display component
-    - Display task name prominently
-    - Render requirements as bullet list
-    - Render unclear points as bullet list
-    - Render suggested questions as bullet list
-    - _Requirements: 3.1, 3.2, 3.3, 3.4_
-  - [ ] 6.2 Write property test for result rendering completeness
-    - **Property 3: Result rendering completeness**
-    - **Validates: Requirements 3.1, 3.2, 3.3, 3.4**
-  - [ ] 6.3 Add responsive styling
-    - Ensure mobile-friendly layout
-    - Apply Tailwind responsive classes
-    - _Requirements: 4.3_
-
-- [ ] 7. Final Checkpoint - Ensure all tests pass
-  - Ensure all tests pass, ask the user if questions arise.
+- [ ] 7. Update Software Requirement result renderer
+  - [ ] 7.1 Ensure existing result renr if questions arise.

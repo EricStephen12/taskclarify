@@ -1,28 +1,10 @@
 import Link from 'next/link';
+import Header from './Header';
 
 export default function Home() {
   return (
     <div className="relative flex min-h-screen w-full flex-col overflow-x-hidden bg-[#f6f6f8]">
-      {/* Header */}
-      <header className="fixed top-0 z-50 w-full border-b border-gray-100 bg-white/85 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 lg:px-8">
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#185adc]/10 text-[#185adc]">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-            </div>
-            <span className="text-lg font-bold tracking-tight text-[#111318]">TaskClarify</span>
-          </div>
-          <nav className="hidden md:flex items-center gap-8">
-            <a className="text-sm font-medium text-[#636f88] hover:text-[#185adc] transition-colors" href="#how-it-works">How it Works</a>
-            <Link className="text-sm font-medium text-[#636f88] hover:text-[#185adc] transition-colors" href="/pricing">Pricing</Link>
-            <a className="text-sm font-medium text-[#636f88] hover:text-[#185adc] transition-colors" href="#founder">About</a>
-          </nav>
-          <div className="flex items-center gap-3">
-            <Link className="hidden md:flex h-9 items-center px-4 text-sm font-medium text-[#111318] hover:bg-gray-100 rounded-lg transition-colors" href="/login">Log in</Link>
-            <Link className="flex h-9 items-center rounded-lg bg-[#185adc] px-4 text-sm font-medium text-white shadow-sm hover:bg-[#1244a8] transition-all hover:shadow-[0_0_15px_rgba(24,90,220,0.3)]" href="/signup">Get Started</Link>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <main className="flex-grow pt-16">
         {/* Hero Section */}
@@ -47,19 +29,19 @@ export default function Home() {
 
 function Hero() {
   return (
-    <section className="relative overflow-hidden py-20 lg:py-32">
+    <section className="relative overflow-hidden py-12 sm:py-20 lg:py-32">
       <div className="absolute -top-24 -left-24 h-96 w-96 rounded-full bg-blue-100 blur-3xl opacity-50 pointer-events-none"></div>
       <div className="absolute top-1/2 -right-24 h-96 w-96 rounded-full bg-indigo-50 blur-3xl opacity-60 pointer-events-none"></div>
       
-      <div className="mx-auto max-w-7xl px-6 lg:px-8 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
-          <div className="flex flex-col gap-8 max-w-2xl">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div className="flex flex-col gap-6 sm:gap-8 max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-[#636f88] shadow-sm w-fit">
               <span className="flex h-2 w-2 rounded-full bg-[#185adc] animate-pulse"></span>
               New: v2.0 AI Engine Live
             </div>
             
-            <h1 className="text-5xl lg:text-[4rem] font-black leading-[1.1] tracking-tight text-[#111318]">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[4rem] font-black leading-[1.1] tracking-tight text-[#111318]">
               Build Tasks <br/>
               <span className="text-[#185adc] relative inline-block">
                 Rightly
@@ -69,15 +51,15 @@ function Hero() {
               </span>
             </h1>
             
-            <p className="text-lg text-[#636f88] leading-relaxed max-w-lg">
+            <p className="text-base sm:text-lg text-[#636f88] leading-relaxed max-w-lg">
               Turn messy meeting notes into clear, actionable requirements in seconds using advanced AI. Don't let ambiguity kill your product momentum.
             </p>
             
-            <div className="flex flex-wrap gap-4">
-              <Link href="/signup" className="flex h-12 items-center justify-center rounded-lg bg-[#185adc] px-8 text-base font-semibold text-white shadow-lg shadow-[#185adc]/25 hover:bg-[#1244a8] hover:translate-y-[-1px] transition-all duration-200">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <Link href="/signup" className="flex h-12 items-center justify-center rounded-lg bg-[#185adc] px-8 text-base font-semibold text-white shadow-lg shadow-[#185adc]/25 hover:bg-[#1244a8] hover:translate-y-[-1px] transition-all duration-200 w-full sm:w-auto">
                 Start for Free
               </Link>
-              <Link href="#how-it-works" className="flex h-12 items-center justify-center rounded-lg border border-gray-200 bg-white px-8 text-base font-semibold text-[#111318] hover:bg-gray-50 hover:border-gray-300 transition-all duration-200">
+              <Link href="#how-it-works" className="flex h-12 items-center justify-center rounded-lg border border-gray-200 bg-white px-8 text-base font-semibold text-[#111318] hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 w-full sm:w-auto">
                 View Demo
               </Link>
             </div>
@@ -105,10 +87,10 @@ function Hero() {
 
 function AppPreview() {
   return (
-    <div className="relative lg:h-[600px] flex items-center justify-center">
-      <div className="relative w-full aspect-square lg:aspect-auto h-full max-h-[500px]">
-        <div className="absolute top-10 right-10 w-full h-full bg-gray-100 rounded-2xl -rotate-6 transform origin-bottom-right z-0 border border-gray-200"></div>
-        <div className="absolute top-5 right-5 w-full h-full bg-gray-50 rounded-2xl -rotate-3 transform origin-bottom-right z-10 border border-gray-200 shadow-sm"></div>
+    <div className="relative h-[350px] sm:h-[450px] lg:h-[600px] flex items-center justify-center mt-8 lg:mt-0">
+      <div className="relative w-full max-w-md lg:max-w-none aspect-[4/5] sm:aspect-square lg:aspect-auto h-full max-h-[500px]">
+        <div className="absolute top-6 right-6 sm:top-10 sm:right-10 w-full h-full bg-gray-100 rounded-2xl -rotate-6 transform origin-bottom-right z-0 border border-gray-200"></div>
+        <div className="absolute top-3 right-3 sm:top-5 sm:right-5 w-full h-full bg-gray-50 rounded-2xl -rotate-3 transform origin-bottom-right z-10 border border-gray-200 shadow-sm"></div>
         <div className="absolute inset-0 bg-white rounded-2xl shadow-2xl border border-gray-100 z-20 overflow-hidden flex flex-col">
           {/* Window Header */}
           <div className="h-12 border-b border-gray-100 flex items-center px-4 gap-2 bg-gray-50/50">
@@ -183,15 +165,15 @@ function TrustBar() {
 
 function HowItWorks() {
   return (
-    <section className="py-24 bg-[#f6f6f8]" id="how-it-works">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="text-center max-w-3xl mx-auto mb-16">
+    <section className="py-16 sm:py-24 bg-[#f6f6f8]" id="how-it-works">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
           <h2 className="text-[#185adc] font-semibold tracking-wide uppercase text-sm mb-3">The Process</h2>
-          <h3 className="text-3xl md:text-4xl font-bold text-[#111318] tracking-tight mb-4">From Chaos to Clarity in 3 Steps</h3>
-          <p className="text-[#636f88] text-lg">Our AI analyzes your raw notes, identifies key requirements, and formats them into developer-ready specifications instantly.</p>
+          <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#111318] tracking-tight mb-4">From Chaos to Clarity in 3 Steps</h3>
+          <p className="text-[#636f88] text-base sm:text-lg">Our AI analyzes your raw notes, identifies key requirements, and formats them into developer-ready specifications instantly.</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative">
           <StepCard 
             num="1" 
             icon="📋" 
@@ -268,44 +250,44 @@ function StepCard({ num, icon, title, desc, preview }: { num: string; icon: stri
 
 function FounderStory() {
   return (
-    <section className="py-24 bg-white relative overflow-hidden" id="founder">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+    <section className="py-16 sm:py-24 bg-white relative overflow-hidden" id="founder">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-12 items-center">
           <div className="lg:col-span-5 relative">
-            <div className="aspect-[4/5] w-full rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative shadow-2xl">
+            <div className="aspect-[4/5] w-full max-w-sm mx-auto lg:max-w-none rounded-2xl overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 relative shadow-2xl">
               <img 
                 src="/boss.png" 
                 alt="Founder talking to team" 
                 className="w-full h-full object-cover"
               />
             </div>
-            <div className="absolute -bottom-8 -right-8 h-24 w-24 bg-[#185adc] text-white rounded-full flex items-center justify-center text-6xl font-serif z-20 shadow-[0_0_15px_rgba(24,90,220,0.3)]">
+            <div className="absolute -bottom-4 -right-4 sm:-bottom-8 sm:-right-8 h-16 w-16 sm:h-24 sm:w-24 bg-[#185adc] text-white rounded-full flex items-center justify-center text-4xl sm:text-6xl font-serif z-20 shadow-[0_0_15px_rgba(24,90,220,0.3)]">
               "
             </div>
           </div>
           
-          <div className="lg:col-span-7 lg:pl-12">
+          <div className="lg:col-span-7 lg:pl-12 mt-8 lg:mt-0">
             <h2 className="text-sm font-bold tracking-widest text-[#636f88] uppercase mb-4">Founder's Story</h2>
-            <h3 className="text-3xl md:text-5xl font-bold text-[#111318] leading-tight mb-8">
+            <h3 className="text-2xl sm:text-3xl md:text-5xl font-bold text-[#111318] leading-tight mb-6 sm:mb-8">
               "I built TaskClarify because I was tired of guessing."
             </h3>
             
-            <div className="space-y-6 text-[#636f88]">
-              <p className="leading-relaxed text-lg">
+            <div className="space-y-4 sm:space-y-6 text-[#636f88]">
+              <p className="leading-relaxed text-base sm:text-lg">
                 I'm 22, managing a complex platform with <strong className="text-[#111318] font-medium">180 users including VIPs</strong>. My boss would explain features and I'd think I understood... then realize halfway through building that I missed key details.
               </p>
-              <p className="leading-relaxed text-lg">
+              <p className="leading-relaxed text-base sm:text-lg">
                 I spent <strong className="text-[#111318] font-medium">3 weeks building a feature nobody asked for</strong>. The meeting notes said "add user preferences." I built an entire settings page with 20+ options. Turns out, they just wanted a "remember my language" checkbox. 🤦‍♂️
               </p>
-              <p className="leading-relaxed text-lg">
+              <p className="leading-relaxed text-base sm:text-lg">
                 That's when I realized: <strong className="text-[#111318] font-medium">the problem isn't coding—it's understanding what to code.</strong>
               </p>
-              <p className="leading-relaxed text-lg">
+              <p className="leading-relaxed text-base sm:text-lg">
                 TaskClarify forces you to identify unclear points BEFORE you start building. No more "that's not what I meant" moments.
               </p>
             </div>
             
-            <div className="mt-10 flex items-center gap-4">
+            <div className="mt-8 sm:mt-10 flex items-center gap-4">
               <div>
                 <p className="text-lg font-bold text-[#111318]">Eric</p>
                 <p className="text-sm text-[#636f88]">Founder & Developer</p>
@@ -321,14 +303,14 @@ function FounderStory() {
 
 function Features() {
   return (
-    <section className="py-24 bg-gray-50">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="max-w-2xl mb-16">
-          <h2 className="text-4xl font-bold tracking-tight text-[#111318]">Everything You Need to Ship Fast</h2>
-          <p className="mt-4 text-lg text-[#636f88]">From ambiguous notes to production-ready specs. Our AI handles the heavy lifting so your team can focus on building.</p>
+    <section className="py-16 sm:py-24 bg-gray-50">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mb-12 sm:mb-16">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#111318]">Everything You Need to Ship Fast</h2>
+          <p className="mt-4 text-base sm:text-lg text-[#636f88]">From ambiguous notes to production-ready specs. Our AI handles the heavy lifting so your team can focus on building.</p>
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
           {[
             {
               icon: "📝",
@@ -370,16 +352,16 @@ function Features() {
 
 function CTA() {
   return (
-    <section className="py-24 bg-white">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="rounded-3xl bg-gradient-to-r from-[#185adc] to-purple-600 p-12 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Ready to Ship Better Products?</h2>
-          <p className="text-lg text-blue-100 max-w-2xl mx-auto mb-8">Join thousands of teams that turn ambiguous requirements into clear action plans.</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup" className="flex h-12 items-center justify-center rounded-lg bg-white px-8 text-base font-semibold text-[#185adc] shadow-lg hover:translate-y-[-2px] transition-transform duration-200">
+    <section className="py-16 sm:py-24 bg-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#185adc] to-purple-600 p-8 sm:p-12 text-center">
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">Ready to Ship Better Products?</h2>
+          <p className="text-base sm:text-lg text-blue-100 max-w-2xl mx-auto mb-6 sm:mb-8">Join thousands of teams that turn ambiguous requirements into clear action plans.</p>
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+            <Link href="/signup" className="flex h-12 items-center justify-center rounded-lg bg-white px-8 text-base font-semibold text-[#185adc] shadow-lg hover:translate-y-[-2px] transition-transform duration-200 w-full sm:w-auto">
               Start Free Trial
             </Link>
-            <Link href="#" className="flex h-12 items-center justify-center rounded-lg border border-white/30 bg-transparent px-8 text-base font-semibold text-white hover:bg-white/10 transition-colors duration-200">
+            <Link href="#" className="flex h-12 items-center justify-center rounded-lg border border-white/30 bg-transparent px-8 text-base font-semibold text-white hover:bg-white/10 transition-colors duration-200 w-full sm:w-auto">
               Schedule Demo
             </Link>
           </div>
@@ -391,10 +373,10 @@ function CTA() {
 
 function Footer() {
   return (
-    <footer className="bg-[#111318] text-gray-400 py-16">
-      <div className="mx-auto max-w-7xl px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
-          <div className="md:col-span-1">
+    <footer className="bg-[#111318] text-gray-400 py-12 sm:py-16">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-12">
+          <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-6">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#185adc]/10 text-[#185adc]">
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
@@ -414,10 +396,10 @@ function Footer() {
           
           <div>
             <h3 className="text-white font-semibold mb-4">Product</h3>
-            <ul className="space-y-3 text-sm">
+            <ul className="space-y-1 text-sm">
               {['Features', 'How It Works', 'Pricing'].map((item, i) => (
                 <li key={i}>
-                  <a href="#" className="hover:text-white transition-colors">{item}</a>
+                  <a href="#" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">{item}</a>
                 </li>
               ))}
             </ul>
@@ -425,10 +407,10 @@ function Footer() {
           
           <div>
             <h3 className="text-white font-semibold mb-4">Resources</h3>
-            <ul className="space-y-3 text-sm">
+            <ul className="space-y-1 text-sm">
               {['Documentation', 'Blog', 'Community', 'Support'].map((item, i) => (
                 <li key={i}>
-                  <a href="#" className="hover:text-white transition-colors">{item}</a>
+                  <a href="#" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">{item}</a>
                 </li>
               ))}
             </ul>
@@ -436,10 +418,10 @@ function Footer() {
           
           <div>
             <h3 className="text-white font-semibold mb-4">Company</h3>
-            <ul className="space-y-3 text-sm">
+            <ul className="space-y-1 text-sm">
               {['About', 'Careers', 'Contact', 'Legal'].map((item, i) => (
                 <li key={i}>
-                  <a href="#" className="hover:text-white transition-colors">{item}</a>
+                  <a href="#" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">{item}</a>
                 </li>
               ))}
             </ul>
@@ -448,9 +430,9 @@ function Footer() {
         
         <div className="pt-8 mt-8 border-t border-gray-800 text-sm flex flex-col md:flex-row justify-between items-center gap-4">
           <div>© 2023 TaskClarify. All rights reserved.</div>
-          <div className="flex gap-6">
+          <div className="flex gap-4 sm:gap-6">
             {['Terms', 'Privacy', 'Cookies'].map((item, i) => (
-              <a key={i} href="#" className="hover:text-white transition-colors">{item}</a>
+              <a key={i} href="#" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">{item}</a>
             ))}
           </div>
         </div>
