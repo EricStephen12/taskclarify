@@ -1,74 +1,181 @@
-import { FormattedNote, SavedNote, FormattedResult, SoftwareRequirementResult, PersonalPlanResult } from '@/types';
+import { SavedNote, FormattedResult, PersonalPlanResult } from '@/types';
 
-const STORAGE_KEY = 'taskclarify_notes';
+const LOCAL_STORAGE_KEY = 'taskclarify_notes';
 
-export function saveNote(note: FormattedResult, rawInput: string): SavedNote {
-  // Convert FormattedResult to SavedNote format (which extends FormattedNote)
-  // For personal plans, we create a minimal FormattedNote structure but include personal-specific fields
-  if (note.detectedType === 'personal') {
-    const personalNote = note as PersonalPlanResult;
-    const saved: SavedNote = {
-      id: crypto.randomUUID(),
-      detectedType: 'personal',
+// Save note to Supabase
+export async function saveNoteToCloud(note: FormattedResult, rawInput: string): Promise<SavedNote | null> {
+  try {
+    const noteData = {
       rawInput,
-      createdAt: new Date().toISOString(),
       taskName: note.taskName,
+      detectedType: note.detectedType,
       summary: note.summary,
-      priority: 'MEDIUM', // Default for personal plans
-      estimatedComplexity: 'Moderate', // Default for personal plans
-      functionalRequirements: [],
-      technicalRequirements: [],
-      userStories: [],
-
-      questionsForStakeholder: [],
-      assumptions: [],
-      outOfScope: [],
-      dependencies: [],
       risks: note.risks,
-      // Personal plan specific fields
-      budget: personalNote.budget,
-      executionSteps: personalNote.executionSteps,
-      constraints: personalNote.constraints,
-      checkpoints: personalNote.checkpoints,
-      timeline: personalNote.timeline,
-      unclearPoints: personalNote.unclearPoints
+      ...(note.detectedType === 'personal' ? {
+        budget: (note as PersonalPlanResult).budget,
+        executionSteps: (note as PersonalPlanResult).executionSteps,
+        constraints: (note as PersonalPlanResult).constraints,
+        checkpoints: (note as PersonalPlanResult).checkpoints,
+        timeline: (note as PersonalPlanResult).timeline,
+        unclearPoints: (note as PersonalPlanResult).unclearPoints,
+        priority: 'MEDIUM',
+        estimatedComplexity: 'Moderate',
+        functionalRequirements: [],
+        technicalRequirements: [],
+        userStories: [],
+        questionsForStakeholder: [],
+        assumptions: [],
+        outOfScope: [],
+        dependencies: []
+      } : {
+        priority: (note as any).priority,
+        estimatedComplexity: (note as any).estimatedComplexity,
+        functionalRequirements: (note as any).functionalRequirements,
+        technicalRequirements: (note as any).technicalRequirements,
+        userStories: (note as any).userStories,
+        unclearPoints: (note as any).unclearPoints,
+        questionsForStakeholder: (note as any).questionsForStakeholder,
+        assumptions: (note as any).assumptions,
+        outOfScope: (note as any).outOfScope,
+        dependencies: (note as any).dependencies
+      })
     };
-    
-    const notes = loadNotes();
-    localStorage.setItem(STORAGE_KEY, JSON.stringify([saved, ...notes]));
-    return saved;
+
+    const res = await fetch('/api/notes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(noteData)
+    });
+
+    if (!res.ok) {
+      console.error('Failed to save note to cloud');
+      return null;
+    }
+
+    return await res.json();
+  } catch (error) {
+    console.error('Error saving note to cloud:', error);
+    return null;
   }
-  
-  // For all other types (software, business, marketing, financial), use the same structure
-  const saved: SavedNote = {
-    ...note,
-    id: crypto.randomUUID(),
-    detectedType: note.detectedType,
-    rawInput,
-    createdAt: new Date().toISOString()
-  };
-  const notes = loadNotes();
-  localStorage.setItem(STORAGE_KEY, JSON.stringify([saved, ...notes]));
-  return saved;
 }
 
-export function loadNotes(): SavedNote[] {
-  if (typeof window === 'undefined') return [];
+// Load notes from Supabase
+export async function loadNotesFromCloud(): Promise<SavedNote[]> {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    if (!data) return [];
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
+    const res = await fetch('/api/notes');
+    if (!res.ok) {
+      console.error('Failed to load notes from cloud');
+      return [];
+    }
+    return await res.json();
+  } catch (error) {
+    console.error('Error loading notes from cloud:', error);
     return [];
   }
 }
 
+// Delete note from Supabase
+export async function deleteNoteFromCloud(id: string): Promise<boolean> {
+  try {
+    const res = await fetch(`/api/notes/${id}`, { method: 'DELETE' });
+    return res.ok;
+  } catch (error) {
+    console.error('Error deleting note from cloud:', error);
+    return false;
+  }
+}
+
+// Migrate localStorage notes to cloud (one-time migration)
+export async function migrateLocalNotesToCloud(): Promise<void> {
+  if (typeof window === 'undefined') return;
+  
+  const migrationKey = 'taskclarify_notes_migrated';
+  if (localStorage.getItem(migrationKey)) return;
+
+  try {
+    const localData = localStorage.getItem(LOCAL_STORAGE_KEY);
+    if (!localData) {
+      localStorage.setItem(migrationKey, 'true');
+      return;
+    }
+
+    const localNotes = JSON.parse(localData);
+    if (!Array.isArray(localNotes) || localNotes.length === 0) {
+      localStorage.setItem(migrationKey, 'true');
+      return;
+    }
+
+    // Upload each local note to cloud
+    for (const note of localNotes) {
+      await fetch('/api/notes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          rawInput: note.rawInput || '',
+          taskName: note.taskName,
+          detectedType: note.detectedType || 'software',
+          summary: note.summary,
+          risks: note.risks || [],
+          priority: note.priority,
+          estimatedComplexity: note.estimatedComplexity,
+          functionalRequirements: note.functionalRequirements || [],
+          technicalRequirements: note.technicalRequirements || [],
+          userStories: note.userStories || [],
+          unclearPoints: note.unclearPoints || [],
+          questionsForStakeholder: note.questionsForStakeholder || [],
+          assumptions: note.assumptions || [],
+          outOfScope: note.outOfScope || [],
+          dependencies: note.dependencies || [],
+          budget: note.budget,
+          executionSteps: note.executionSteps,
+          constraints: note.constraints,
+          checkpoints: note.checkpoints,
+          timeline: note.timeline
+        })
+      });
+    }
+
+    // Mark as migrated and clear local storage
+    localStorage.setItem(migrationKey, 'true');
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    console.log('Successfully migrated local notes to cloud');
+  } catch (error) {
+    console.error('Error migrating notes to cloud:', error);
+  }
+}
+
+// Legacy functions for backward compatibility (deprecated)
+export function saveNote(note: FormattedResult, rawInput: string): SavedNote {
+  const saved: SavedNote = {
+    id: crypto.randomUUID(),
+    detectedType: note.detectedType,
+    rawInput,
+    createdAt: new Date().toISOString(),
+    taskName: note.taskName,
+    summary: note.summary,
+    priority: 'MEDIUM',
+    estimatedComplexity: 'Moderate',
+    functionalRequirements: [],
+    technicalRequirements: [],
+    userStories: [],
+    questionsForStakeholder: [],
+    assumptions: [],
+    outOfScope: [],
+    dependencies: [],
+    risks: note.risks,
+    unclearPoints: (note as any).unclearPoints || []
+  };
+  return saved;
+}
+
+export function loadNotes(): SavedNote[] {
+  return [];
+}
+
 export function deleteNote(id: string): void {
-  const notes = loadNotes().filter(n => n.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+  // No-op, use deleteNoteFromCloud instead
 }
 
 export function getNote(id: string): SavedNote | undefined {
-  return loadNotes().find(n => n.id === id);
+  return undefined;
 }

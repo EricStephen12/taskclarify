@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { SavedNote, TaskType, FormattedResult, PersonalPlanResult, SoftwareRequirementResult, DashboardTab, SOP, SavedSOP, MeetingMinutes, BlameProofDocs, ActionPlanSection, TimelineEntry, MeetingAgendaSection } from '@/types';
-import { saveNote, loadNotes, deleteNote } from '@/lib/storage';
+import { saveNoteToCloud, loadNotesFromCloud, deleteNoteFromCloud, migrateLocalNotesToCloud } from '@/lib/storage';
 import { saveSOP, loadSOPs, deleteSOP, markStepComplete, snoozeReminder, rescheduleSOP, getSOPProgress, archiveSOP, markReminderTriggered } from '@/lib/sopStorage';
 import { requestNotificationPermission, startReminderChecker, stopReminderChecker, formatDuration, getNextReminderTime } from '@/lib/notifications';
 
@@ -62,8 +62,17 @@ export default function Dashboard() {
   }
 
   useEffect(() => {
-    const notes = loadNotes();
-    setSavedNotes(Array.isArray(notes) ? notes : []);
+    // Load notes from cloud
+    async function loadData() {
+      // First migrate any local notes to cloud
+      await migrateLocalNotesToCloud();
+      
+      // Then load from cloud
+      const cloudNotes = await loadNotesFromCloud();
+      setSavedNotes(Array.isArray(cloudNotes) ? cloudNotes : []);
+    }
+    loadData();
+    
     const sops = loadSOPs();
     setSavedSOPs(Array.isArray(sops) ? sops : []);
     
@@ -239,20 +248,28 @@ export default function Dashboard() {
     finally { setLoading(false); }
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!result) return;
-    const saved = saveNote(result, notes);
-    setSavedNotes([saved, ...savedNotes]);
-    setResult(null);
-    setNotes('');
-    setToast('Requirements document saved!');
+    const saved = await saveNoteToCloud(result, notes);
+    if (saved) {
+      setSavedNotes([saved, ...savedNotes]);
+      setResult(null);
+      setNotes('');
+      setToast('Requirements document saved!');
+    } else {
+      setToast('Failed to save document');
+    }
   }
 
-  function handleDelete(id: string) {
-    deleteNote(id);
-    setSavedNotes(savedNotes.filter(n => n.id !== id));
-    if (selectedNote?.id === id) setSelectedNote(null);
-    setToast('Document deleted');
+  async function handleDelete(id: string) {
+    const success = await deleteNoteFromCloud(id);
+    if (success) {
+      setSavedNotes(savedNotes.filter(n => n.id !== id));
+      if (selectedNote?.id === id) setSelectedNote(null);
+      setToast('Document deleted');
+    } else {
+      setToast('Failed to delete document');
+    }
   }
 
   function exportAsMarkdown() {
@@ -555,23 +572,25 @@ ${r.description}
             <p className="text-[#636f88] mt-1 text-sm sm:text-base">Transform messy notes into professional requirements documents</p>
           </div>
 
-          <div className="flex flex-wrap gap-1 p-1 bg-gray-100 rounded-xl w-full sm:w-fit mb-6 sm:mb-8">
-            <button onClick={() => setActiveTab('format')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${activeTab === 'format' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
-              Clarify Tasks
-            </button>
-            <button onClick={() => setActiveTab('blameproof')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${activeTab === 'blameproof' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
-              Blame-Proof
-            </button>
-            <button onClick={() => setActiveTab('minutes')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${activeTab === 'minutes' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
-              Minutes
-            </button>
-            <button onClick={() => setActiveTab('sop')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${activeTab === 'sop' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
-              SOP
-            </button>
-            <button onClick={() => setActiveTab('saved')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 min-h-[44px] ${activeTab === 'saved' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
-              Saved
-              {(savedNotes.length + savedSOPs.length) > 0 && <span className="px-2 py-0.5 bg-[#185adc]/10 text-[#185adc] rounded-full text-xs">{savedNotes.length + savedSOPs.length}</span>}
-            </button>
+          <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 mb-6 sm:mb-8 scrollbar-hide">
+            <div className="flex gap-2 p-1 bg-gray-100 rounded-full w-max sm:w-fit">
+              <button onClick={() => setActiveTab('format')} className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[40px] ${activeTab === 'format' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+                Clarify Tasks
+              </button>
+              <button onClick={() => setActiveTab('blameproof')} className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[40px] ${activeTab === 'blameproof' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+                Blame-Proof
+              </button>
+              <button onClick={() => setActiveTab('minutes')} className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[40px] ${activeTab === 'minutes' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+                Minutes
+              </button>
+              <button onClick={() => setActiveTab('sop')} className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all min-h-[40px] ${activeTab === 'sop' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+                SOP
+              </button>
+              <button onClick={() => setActiveTab('saved')} className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 min-h-[40px] ${activeTab === 'saved' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+                Saved
+                {(savedNotes.length + savedSOPs.length) > 0 && <span className="px-2 py-0.5 bg-[#185adc]/10 text-[#185adc] rounded-full text-xs">{savedNotes.length + savedSOPs.length}</span>}
+              </button>
+            </div>
           </div>
 
           {activeTab === 'format' ? (

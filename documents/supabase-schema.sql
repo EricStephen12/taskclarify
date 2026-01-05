@@ -26,16 +26,14 @@ create policy "Users can update own profile"
   on profiles for update
   using (auth.uid() = id);
 
--- Notes table
+-- Notes table (stores full formatted documents)
 create table notes (
   id uuid default gen_random_uuid() primary key,
   user_id uuid references auth.users(id) on delete cascade not null,
   raw_input text not null,
   task_name text not null,
-  requirements jsonb not null,
-  unclear_points jsonb not null,
-  questions jsonb not null,
-  confirmation_message text,
+  detected_type text not null,
+  document_data jsonb not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
