@@ -1,10 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase-server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+interface NoteRow {
+  id: string;
+  raw_input: string;
+  task_name: string;
+  detected_type: string;
+  document_data: Record<string, unknown>;
+  created_at: string;
+}
+
+function getSupabaseClient() {
+  const cookieStore = cookies();
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // Ignore errors in server components
+          }
+        },
+      },
+    }
+  );
+}
 
 // GET - Load all notes for the user
 export async function GET() {
   try {
-    const supabase = await createClient();
+    const supabase = getSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
@@ -23,7 +57,7 @@ export async function GET() {
     }
 
     // Transform to match SavedNote format
-    const savedNotes = notes.map(note => ({
+    const savedNotes = (notes as NoteRow[]).map((note) => ({
       id: note.id,
       rawInput: note.raw_input,
       taskName: note.task_name,
@@ -42,7 +76,7 @@ export async function GET() {
 // POST - Save a new note
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient();
+    const supabase = getSupabaseClient();
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
