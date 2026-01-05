@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { SavedNote, TaskType, FormattedResult, PersonalPlanResult, SoftwareRequirementResult, DashboardTab, SOP, SavedSOP, MeetingMinutes, BlameProofDocs, ActionPlanSection, TimelineEntry, MeetingAgendaSection } from '@/types';
 import { saveNote, loadNotes, deleteNote } from '@/lib/storage';
-import { saveSOP, loadSOPs, deleteSOP, markStepComplete, snoozeReminder, rescheduleSOP, getSOPProgress, archiveSOP } from '@/lib/sopStorage';
+import { saveSOP, loadSOPs, deleteSOP, markStepComplete, snoozeReminder, rescheduleSOP, getSOPProgress, archiveSOP, markReminderTriggered } from '@/lib/sopStorage';
 import { requestNotificationPermission, startReminderChecker, stopReminderChecker, formatDuration, getNextReminderTime } from '@/lib/notifications';
 
 export default function Dashboard() {
@@ -81,7 +81,8 @@ export default function Dashboard() {
           setActiveReminder({ sop, stepId: step.id });
           setToast(`Reminder: ${step.title}`);
         }
-      }
+      },
+      markReminderTriggered
     );
     
     return () => stopReminderChecker();
@@ -1342,6 +1343,49 @@ function SavedDocumentsGrid({
                 <div className="flex items-center justify-between text-xs text-[#636f88]">
                   <span>{new Date(note.createdAt).toLocaleDateString()}</span>
                   <span>{note.functionalRequirements.length} requirements</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Saved SOPs */}
+      {sops.length > 0 && (
+        <div>
+          <h3 className="text-sm font-bold text-[#636f88] uppercase tracking-wider mb-4">Saved SOPs ({sops.length})</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sops.map(sop => (
+              <div key={sop.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelectSOP(sop)}>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex flex-wrap gap-1">
+                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${
+                      sop.status === 'completed' ? 'bg-green-100 text-green-700' :
+                      sop.status === 'in-progress' ? 'bg-blue-100 text-blue-700' :
+                      sop.status === 'archived' ? 'bg-gray-100 text-gray-700' :
+                      'bg-emerald-100 text-emerald-700'
+                    }`}>{sop.status}</span>
+                    <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-emerald-100 text-emerald-700">SOP</span>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); onDeleteSOP(sop.id); }} className="w-8 h-8 flex items-center justify-center rounded hover:bg-red-50 text-[#636f88] hover:text-red-500 transition min-h-[44px] min-w-[44px]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  </button>
+                </div>
+                <h3 className="font-semibold text-[#111318] mb-1 line-clamp-2">{sop.name}</h3>
+                <p className="text-sm text-[#636f88] line-clamp-2 mb-3">{sop.summary}</p>
+                <div className="flex items-center justify-between text-xs text-[#636f88]">
+                  <span>{new Date(sop.createdAt).toLocaleDateString()}</span>
+                  <span>{sop.steps.length} steps • {formatDuration(sop.totalDuration)}</span>
+                </div>
+                {/* Progress bar */}
+                <div className="mt-3">
+                  <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 rounded-full transition-all"
+                      style={{ width: `${(sop.steps.filter(s => s.completed).length / sop.steps.length) * 100}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-[#636f88] mt-1">{sop.steps.filter(s => s.completed).length}/{sop.steps.length} steps completed</p>
                 </div>
               </div>
             ))}

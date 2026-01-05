@@ -56,7 +56,8 @@ let reminderInterval: NodeJS.Timeout | null = null;
 
 export function startReminderChecker(
   getSOPs: () => SavedSOP[],
-  callback: ReminderCallback
+  callback: ReminderCallback,
+  markReminderTriggered?: (sopId: string, stepId: string) => void
 ): void {
   if (reminderInterval) {
     clearInterval(reminderInterval);
@@ -81,6 +82,10 @@ export function startReminderChecker(
           if (step && !step.completed) {
             callback.onReminder(sop, step);
             sendStepReminder(sop, step);
+            // Mark reminder as triggered to prevent repeated notifications
+            if (markReminderTriggered) {
+              markReminderTriggered(sop.id, reminder.stepId);
+            }
           }
         }
       }

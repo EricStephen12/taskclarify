@@ -142,3 +142,17 @@ export function getSOPProgress(sop: SavedSOP): number {
 export function archiveSOP(sopId: string): SavedSOP | null {
   return updateSOP(sopId, { status: 'archived' as SOPStatus });
 }
+
+export function markReminderTriggered(sopId: string, stepId: string): SavedSOP | null {
+  const sops = loadSOPs();
+  const sop = sops.find(s => s.id === sopId);
+  
+  if (!sop) return null;
+  
+  const reminderIndex = sop.reminders.findIndex(r => r.stepId === stepId);
+  if (reminderIndex === -1) return null;
+  
+  sop.reminders[reminderIndex].triggered = true;
+  
+  return updateSOP(sopId, sop);
+}
