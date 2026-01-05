@@ -38,7 +38,7 @@ function Hero() {
           <div className="flex flex-col gap-6 sm:gap-8 max-w-2xl">
             <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-[#636f88] shadow-sm w-fit">
               <span className="flex h-2 w-2 rounded-full bg-[#185adc] animate-pulse"></span>
-              New: v2.0 AI Engine Live
+              New: SOPs, Meeting Minutes & Blame-Proof Docs
             </div>
             
             <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[4rem] font-black leading-[1.1] tracking-tight text-[#111318]">
@@ -52,7 +52,7 @@ function Hero() {
             </h1>
             
             <p className="text-base sm:text-lg text-[#636f88] leading-relaxed max-w-lg">
-              Turn messy meeting notes into clear, actionable requirements in seconds using advanced AI. Don't let ambiguity kill your product momentum.
+              Transform messy notes into actionable plans in seconds. Whether you're a PM, developer, marketer, or business owner — our AI turns confusion into clear next steps.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
@@ -60,19 +60,19 @@ function Hero() {
                 Start for Free
               </Link>
               <Link href="#how-it-works" className="flex h-12 items-center justify-center rounded-lg border border-gray-200 bg-white px-8 text-base font-semibold text-[#111318] hover:bg-gray-50 hover:border-gray-300 transition-all duration-200 w-full sm:w-auto">
-                View Demo
+                See How It Works
               </Link>
             </div>
             
             <div className="flex items-center gap-4 pt-4 text-sm text-[#636f88]">
               <div className="flex -space-x-2">
-                {['👩‍💻', '🧑‍💼', '👨‍💻', '👩‍🎨', '🧑‍🔬'].map((emoji, i) => (
+                {['👩‍💻', '🧑‍💼', '👨‍💻', '👩‍🎨', '📊'].map((emoji, i) => (
                   <div key={i} className="inline-flex h-8 w-8 items-center justify-center rounded-full ring-2 ring-white bg-gradient-to-br from-blue-100 to-indigo-100 text-sm">
                     {emoji}
                   </div>
                 ))}
               </div>
-              <span>Loved by 2,000+ developers</span>
+              <span>Loved by 2,000+ professionals</span>
             </div>
           </div>
           
@@ -170,15 +170,15 @@ function HowItWorks() {
         <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
           <h2 className="text-[#185adc] font-semibold tracking-wide uppercase text-sm mb-3">The Process</h2>
           <h3 className="text-2xl sm:text-3xl md:text-4xl font-bold text-[#111318] tracking-tight mb-4">From Chaos to Clarity in 3 Steps</h3>
-          <p className="text-[#636f88] text-base sm:text-lg">Our AI analyzes your raw notes, identifies key requirements, and formats them into developer-ready specifications instantly.</p>
+          <p className="text-[#636f88] text-base sm:text-lg">Our AI analyzes your raw notes, identifies what matters, and formats them into actionable plans — whether it's software specs, business tasks, or personal goals.</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8 relative">
           <StepCard 
             num="1" 
             icon="📋" 
-            title="Paste Notes" 
-            desc="Simply copy your messy meeting notes, brain dumps, or Slack threads into the editor."
+            title="Paste Anything" 
+            desc="Copy your messy meeting notes, voice transcripts, Slack threads, or brain dumps into the editor."
             preview={
               <div className="mt-auto bg-gray-50 rounded-lg p-3 border border-gray-100 font-mono text-xs text-gray-500 h-32 overflow-hidden relative">
                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-gray-50/90 z-10"></div>
@@ -194,7 +194,7 @@ function HowItWorks() {
             num="2" 
             icon="🧠" 
             title="AI Processing" 
-            desc="Our context-aware engine analyzes intent, technical details, and user flows."
+            desc="Our smart engine detects the type (software, business, personal, marketing, financial) and formats accordingly."
             preview={
               <div className="mt-auto bg-gray-900 rounded-lg p-3 border border-gray-800 flex items-center justify-center h-32 relative overflow-hidden">
                 <div className="absolute inset-0 bg-gradient-to-tr from-[#185adc]/20 to-purple-500/20 z-0"></div>
@@ -203,7 +203,7 @@ function HowItWorks() {
                   <div className="h-1 w-16 bg-gray-700 rounded-full overflow-hidden">
                     <div className="h-full bg-[#185adc] w-1/2 animate-pulse"></div>
                   </div>
-                  <span className="text-[10px] text-gray-400 uppercase tracking-widest">Thinking</span>
+                  <span className="text-[10px] text-gray-400 uppercase tracking-widest">Auto-Detecting</span>
                 </div>
               </div>
             }
@@ -211,13 +211,13 @@ function HowItWorks() {
           <StepCard 
             num="3" 
             icon="✅" 
-            title="View Results" 
-            desc="Receive perfectly formatted user stories and acceptance criteria ready for your development team."
+            title="Get Results" 
+            desc="Receive perfectly formatted action plans, SOPs, meeting minutes, or blame-proof documentation instantly."
             preview={
               <div className="mt-auto bg-white rounded-lg p-3 border border-gray-200 shadow-sm h-32 overflow-hidden flex flex-col gap-2">
                 <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
                   <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                  <span className="text-[10px] font-bold text-gray-800">TICKET-104</span>
+                  <span className="text-[10px] font-bold text-gray-800">ACTION PLAN</span>
                 </div>
                 <div className="h-2 w-3/4 bg-gray-200 rounded-full"></div>
                 <div className="h-2 w-full bg-gray-100 rounded-full"></div>
@@ -306,36 +306,41 @@ function Features() {
     <section className="py-16 sm:py-24 bg-gray-50">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-2xl mb-12 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#111318]">Everything You Need to Ship Fast</h2>
-          <p className="mt-4 text-base sm:text-lg text-[#636f88]">From ambiguous notes to production-ready specs. Our AI handles the heavy lifting so your team can focus on building.</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight text-[#111318]">Everything You Need to Get Things Done</h2>
+          <p className="mt-4 text-base sm:text-lg text-[#636f88]">From messy notes to actionable plans. Our AI handles the heavy lifting so you can focus on execution.</p>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-8">
           {[
             {
+              icon: "🎯",
+              title: "Smart Task Detection",
+              description: "AI automatically detects if it's software, business, personal, marketing, or financial — and formats accordingly."
+            },
+            {
+              icon: "📋",
+              title: "SOP Generator",
+              description: "Turn any process into step-by-step SOPs with time estimates and reminders to keep you on track."
+            },
+            {
+              icon: "🛡️",
+              title: "Blame-Proof Docs",
+              description: "Generate paper trail emails, action plans, and meeting agendas that protect you professionally."
+            },
+            {
+              icon: "🎤",
+              title: "Voice Input",
+              description: "Record meetings or voice notes and let AI transcribe and format them into structured documents."
+            },
+            {
               icon: "📝",
-              title: "Smart Parsing",
-              description: "Transforms messy notes into structured requirements with contextual understanding."
+              title: "Meeting Minutes",
+              description: "Transform meeting recordings into professional minutes with action items and decisions."
             },
             {
               icon: "🔍",
               title: "Ambiguity Detection",
-              description: "Identifies unclear points and asks clarifying questions before development begins."
-            },
-            {
-              icon: "🔄",
-              title: "Real-time Sync",
-              description: "Updates requirements instantly as your notes evolve during the project lifecycle."
-            },
-            {
-              icon: "🎯",
-              title: "Acceptance Criteria",
-              description: "Generates testable acceptance criteria for every user story automatically."
-            },
-            {
-              icon: "📊",
-              title: "Impact Analysis",
-              description: "Estimates development effort and identifies dependencies for each requirement."
+              description: "Identifies unclear points and asks clarifying questions before you start working."
             }
           ].map((feature, index) => (
             <div key={index} className="flex flex-col bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:border-gray-200 transition-colors duration-200">
@@ -355,14 +360,14 @@ function CTA() {
     <section className="py-16 sm:py-24 bg-white">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="rounded-2xl sm:rounded-3xl bg-gradient-to-r from-[#185adc] to-purple-600 p-8 sm:p-12 text-center">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">Ready to Ship Better Products?</h2>
-          <p className="text-base sm:text-lg text-blue-100 max-w-2xl mx-auto mb-6 sm:mb-8">Join thousands of teams that turn ambiguous requirements into clear action plans.</p>
+          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4">Ready to Turn Chaos Into Clarity?</h2>
+          <p className="text-base sm:text-lg text-blue-100 max-w-2xl mx-auto mb-6 sm:mb-8">Join thousands of professionals who transform messy notes into actionable plans every day.</p>
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
             <Link href="/signup" className="flex h-12 items-center justify-center rounded-lg bg-white px-8 text-base font-semibold text-[#185adc] shadow-lg hover:translate-y-[-2px] transition-transform duration-200 w-full sm:w-auto">
-              Start Free Trial
+              Start Free — 5 Formats/Month
             </Link>
-            <Link href="#" className="flex h-12 items-center justify-center rounded-lg border border-white/30 bg-transparent px-8 text-base font-semibold text-white hover:bg-white/10 transition-colors duration-200 w-full sm:w-auto">
-              Schedule Demo
+            <Link href="/pricing" className="flex h-12 items-center justify-center rounded-lg border border-white/30 bg-transparent px-8 text-base font-semibold text-white hover:bg-white/10 transition-colors duration-200 w-full sm:w-auto">
+              View Pricing
             </Link>
           </div>
         </div>
@@ -383,57 +388,43 @@ function Footer() {
               </div>
               <span className="text-lg font-bold tracking-tight text-white">TaskClarify</span>
             </div>
-            <p className="text-sm mb-6">Turn messy notes into clear requirements. Build the right thing, faster.</p>
-            <div className="flex gap-4">
-              {['twitter', 'github', 'linkedin'].map((social, i) => (
-                <a key={i} href="#" className="text-gray-400 hover:text-white transition-colors">
-                  <span className="sr-only">{social}</span>
-                  <div className="h-5 w-5 bg-gray-600 rounded"></div>
-                </a>
-              ))}
-            </div>
+            <p className="text-sm mb-6">Build tasks rightly. Turn messy notes into clear action plans.</p>
           </div>
           
           <div>
             <h3 className="text-white font-semibold mb-4">Product</h3>
             <ul className="space-y-1 text-sm">
-              {['Features', 'How It Works', 'Pricing'].map((item, i) => (
-                <li key={i}>
-                  <a href="#" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">{item}</a>
-                </li>
-              ))}
+              <li><Link href="/#how-it-works" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">How It Works</Link></li>
+              <li><Link href="/pricing" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Pricing</Link></li>
+              <li><Link href="/signup" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Get Started</Link></li>
             </ul>
           </div>
           
           <div>
-            <h3 className="text-white font-semibold mb-4">Resources</h3>
+            <h3 className="text-white font-semibold mb-4">Legal</h3>
             <ul className="space-y-1 text-sm">
-              {['Documentation', 'Blog', 'Community', 'Support'].map((item, i) => (
-                <li key={i}>
-                  <a href="#" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">{item}</a>
-                </li>
-              ))}
+              <li><Link href="/terms" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Privacy Policy</Link></li>
+              <li><Link href="/refund" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Refund Policy</Link></li>
             </ul>
           </div>
           
           <div>
-            <h3 className="text-white font-semibold mb-4">Company</h3>
+            <h3 className="text-white font-semibold mb-4">Account</h3>
             <ul className="space-y-1 text-sm">
-              {['About', 'Careers', 'Contact', 'Legal'].map((item, i) => (
-                <li key={i}>
-                  <a href="#" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">{item}</a>
-                </li>
-              ))}
+              <li><Link href="/login" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Login</Link></li>
+              <li><Link href="/signup" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Sign Up</Link></li>
+              <li><Link href="/dashboard" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Dashboard</Link></li>
             </ul>
           </div>
         </div>
         
         <div className="pt-8 mt-8 border-t border-gray-800 text-sm flex flex-col md:flex-row justify-between items-center gap-4">
-          <div>© 2023 TaskClarify. All rights reserved.</div>
+          <div>© {new Date().getFullYear()} TaskClarify. All rights reserved.</div>
           <div className="flex gap-4 sm:gap-6">
-            {['Terms', 'Privacy', 'Cookies'].map((item, i) => (
-              <a key={i} href="#" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">{item}</a>
-            ))}
+            <Link href="/terms" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Terms</Link>
+            <Link href="/privacy" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Privacy</Link>
+            <Link href="/refund" className="hover:text-white transition-colors inline-flex items-center min-h-[44px]">Refund</Link>
           </div>
         </div>
       </div>

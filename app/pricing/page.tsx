@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { createClient } from '@/lib/supabase';
 
 declare global {
   interface Window {
@@ -15,7 +16,19 @@ declare global {
 }
 
 export default function Pricing() {
+  const [userId, setUserId] = useState<string | null>(null);
+
   useEffect(() => {
+    // Get current user
+    async function getUser() {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    }
+    getUser();
+
     // Load Paddle.js
     const script = document.createElement('script');
     script.src = 'https://cdn.paddle.com/paddle/v2/paddle.js';
@@ -32,9 +45,16 @@ export default function Pricing() {
   }, []);
 
   const handleCheckout = () => {
+    if (!userId) {
+      // Redirect to login if not authenticated
+      window.location.href = '/login?redirect=/pricing';
+      return;
+    }
+    
     if (window.Paddle) {
       window.Paddle.Checkout.open({
         items: [{ priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || '', quantity: 1 }],
+        customData: { user_id: userId }
       });
     }
   };

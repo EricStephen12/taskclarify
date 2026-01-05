@@ -21,6 +21,9 @@ export default function Dashboard() {
   const [recordingTime, setRecordingTime] = useState(0);
   const [currentNotes, setCurrentNotes] = useState('');
   
+  // Usage tracking state
+  const [usage, setUsage] = useState<{ isPro: boolean; used: number; limit: number; remaining: number } | null>(null);
+  
   // Blame-Proof state
   const [blameProofInput, setBlameProofInput] = useState('');
   const [blameProofOutput, setBlameProofOutput] = useState<BlameProofDocs | null>(null);
@@ -45,11 +48,27 @@ export default function Dashboard() {
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Fetch usage on mount
+  async function fetchUsage() {
+    try {
+      const res = await fetch('/api/usage');
+      if (res.ok) {
+        const data = await res.json();
+        setUsage(data);
+      }
+    } catch (err) {
+      console.error('Failed to fetch usage:', err);
+    }
+  }
+
   useEffect(() => {
     const notes = loadNotes();
     setSavedNotes(Array.isArray(notes) ? notes : []);
     const sops = loadSOPs();
     setSavedSOPs(Array.isArray(sops) ? sops : []);
+    
+    // Fetch usage
+    fetchUsage();
     
     // Request notification permission
     requestNotificationPermission();
@@ -170,6 +189,28 @@ export default function Dashboard() {
     }
 
     try {
+      // Check usage limit first (only for new formats, not overrides)
+      if (!taskTypeOverride) {
+        const usageRes = await fetch('/api/usage', { method: 'POST' });
+        const usageData = await usageRes.json();
+        
+        if (!usageRes.ok) {
+          if (usageData.limitReached) {
+            setError('You\'ve used all 5 free formats this month. Upgrade to Pro for unlimited access!');
+            setLoading(false);
+            return;
+          }
+          setError(usageData.error || 'Failed to check usage');
+          setLoading(false);
+          return;
+        }
+        
+        // Update usage state
+        if (usageData.used !== undefined) {
+          setUsage(prev => prev ? { ...prev, used: usageData.used, remaining: usageData.remaining } : null);
+        }
+      }
+
       const res = await fetch('/api/format', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -182,6 +223,10 @@ export default function Dashboard() {
       if (!res.ok) { setError(data.error || 'Something went wrong'); return; }
       setResult(data);
       setShowOverrideMenu(false);
+      
+      // Refresh usage after successful format
+      fetchUsage();
+      
       if (taskTypeOverride) {
         const taskTypeLabel = taskTypeOverride === 'personal' ? 'Personal Plan' :
                            taskTypeOverride === 'software' ? 'Software Requirement' :
@@ -466,12 +511,38 @@ ${r.description}
             <span className="text-lg font-bold tracking-tight text-[#111318]">TaskClarify</span>
           </Link>
           <div className="flex items-center gap-2 sm:gap-4">
-            <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-xs font-medium">
-              <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-              Free Plan • 5 left
-            </div>
-            <Link href="/pricing" className="text-sm font-medium text-[#185adc] hover:text-[#1244a8] transition">Upgrade</Link>
-            <button className="text-sm text-[#636f88] hover:text-[#111318] transition hidden sm:block">Logout</button>
+            {usage && (
+              <div className={`hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
+                usage.isPro 
+                  ? 'bg-purple-50 text-purple-700' 
+                  : usage.remaining > 0 
+                    ? 'bg-green-50 text-green-700' 
+                    : 'bg-red-50 text-red-700'
+              }`}>
+                <span className={`w-2 h-2 rounded-full ${
+                  usage.isPro 
+                    ? 'bg-purple-500' 
+                    : usage.remaining > 0 
+                      ? 'bg-green-500 animate-pulse' 
+                      : 'bg-red-500'
+                }`}></span>
+                {usage.isPro ? 'Pro Plan • Unlimited' : `Free Plan • ${usage.remaining} left`}
+              </div>
+            )}
+            {!usage?.isPro && (
+              <Link href="/pricing" className="text-sm font-medium text-[#185adc] hover:text-[#1244a8] transition">Upgrade</Link>
+            )}
+            <button 
+              onClick={async () => {
+                const { createClient } = await import('@/lib/supabase');
+                const supabase = createClient();
+                await supabase.auth.signOut();
+                window.location.href = '/login';
+              }}
+              className="text-sm text-[#636f88] hover:text-[#111318] transition hidden sm:block"
+            >
+              Logout
+            </button>
           </div>
         </div>
       </header>
