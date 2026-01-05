@@ -153,33 +153,43 @@ If PERSONAL, return JSON:
   "taskName": "Clear name for this plan",
   "summary": "2-3 sentence summary",
   "budget": { 
-    "total": 0, 
+    "total": 50000, 
     "currency": "NGN", 
     "categories": [
       {
-        "name": "",
+        "name": "Equipment/Supplies",
+        "allocated": 30000,
+        "items": [
+          { "name": "Gym membership", "amount": 15000, "quantity": 1, "notes": "Monthly fee" },
+          { "name": "Running shoes", "amount": 15000, "quantity": 1, "notes": "Good quality for support" }
+        ]
+      },
+      {
+        "name": "Free Alternatives",
         "allocated": 0,
         "items": [
-          { "name": "", "amount": 0, "quantity": 1, "notes": "" }
+          { "name": "Bodyweight workouts", "amount": 0, "quantity": 1, "notes": "YouTube: Chloe Ting, THENX" },
+          { "name": "Running/Walking", "amount": 0, "quantity": 1, "notes": "Use Strava or Nike Run Club app" },
+          { "name": "Meal tracking", "amount": 0, "quantity": 1, "notes": "MyFitnessPal or Google Fit" }
         ]
       }
     ], 
-    "remaining": 0 
+    "remaining": 20000 
   },
   "executionSteps": [
-    { "id": "1", "action": "", "details": "", "location": "", "tips": ["", ""], "completed": false },
-    { "id": "2", "action": "", "details": "", "location": "", "tips": ["", ""], "completed": false }
+    { "id": "1", "action": "Start small", "details": "Begin with 3x 20-minute workouts per week", "location": "Home or nearby park", "tips": ["Don't overcommit early", "Consistency beats intensity"], "completed": false },
+    { "id": "2", "action": "Track progress", "details": "Use free app to log workouts and meals", "location": "", "tips": ["MyFitnessPal for food", "Google Fit for steps"], "completed": false }
   ],
-  "constraints": ["", ""],
-  "checkpoints": ["", ""],
-  "timeline": "",
+  "constraints": ["Busy schedule - limited time", "Budget conscious"],
+  "checkpoints": ["Week 1: Complete 3 workouts", "Month 1: Establish routine"],
+  "timeline": "3-6 months for visible results",
   "unclearPoints": [
-    { "id": "UC-001", "issue": "", "impact": "", "suggestedResolution": "" },
-    { "id": "UC-002", "issue": "", "impact": "", "suggestedResolution": "" }
+    { "id": "UC-001", "issue": "Specific fitness goal unclear", "impact": "Hard to measure progress", "suggestedResolution": "Define target: weight loss, muscle gain, or endurance?" },
+    { "id": "UC-002", "issue": "Available equipment unknown", "impact": "Affects workout selection", "suggestedResolution": "List what you have access to" }
   ],
   "risks": [
-    { "risk": "", "mitigation": "" },
-    { "risk": "", "mitigation": "" }
+    { "risk": "Losing motivation after initial excitement", "mitigation": "Find accountability buddy or join fitness community" },
+    { "risk": "Injury from overtraining", "mitigation": "Start slow, rest days are essential, proper warm-up" }
   ]
 }
 
@@ -192,56 +202,57 @@ If SOFTWARE, BUSINESS, MARKETING, or FINANCIAL, return JSON:
   "estimatedComplexity": "Simple" | "Moderate" | "Complex",
   "executiveSummary": {
     "problemStatement": "Clear description of the core issue",
-    "immediateActions": ["", ""],
+    "immediateActions": ["Action 1", "Action 2"],
     "timeline": "Overall timeline and key milestones",
-    "owners": ["", ""]
+    "owners": ["Product Manager", "Tech Lead"]
   },
   "functionalRequirements": [
-    { "id": "FR-001", "title": "", "description": "", "acceptanceCriteria": ["", ""] },
-    { "id": "FR-002", "title": "", "description": "", "acceptanceCriteria": ["", ""] }
+    { "id": "FR-001", "title": "Core Feature", "description": "What the system must do", "acceptanceCriteria": ["Specific measurable criterion 1", "Specific measurable criterion 2"] },
+    { "id": "FR-002", "title": "Secondary Feature", "description": "Additional functionality", "acceptanceCriteria": ["Criterion 1", "Criterion 2"] }
   ],
   "timePhasedPlan": {
     "phase1": {
       "name": "Immediate Actions",
       "description": "Actions to take right away",
-      "timeline": "When to complete",
-      "owners": ["", ""]
+      "timeline": "This week",
+      "owners": ["Assigned Owner 1"]
     },
     "phase2": {
       "name": "Short-term Actions",
       "description": "Actions to take next",
-      "timeline": "When to complete",
-      "owners": ["", ""]
+      "timeline": "Next 2 weeks",
+      "owners": ["Assigned Owner 2"]
     },
     "phase3": {
       "name": "Long-term Actions",
       "description": "Strategic follow-up actions",
-      "timeline": "When to complete",
-      "owners": ["", ""]
+      "timeline": "Next month",
+      "owners": ["Assigned Owner 3"]
     }
   },
   "technicalRequirements": [
-    { "id": "TR-001", "title": "", "description": "" },
-    { "id": "TR-002", "title": "", "description": "" }
+    { "id": "TR-001", "title": "Technical Spec", "description": "Implementation detail" },
+    { "id": "TR-002", "title": "Performance", "description": "Performance requirements" }
   ],
   "userStories": [
-    { "id": "US-001", "persona": "", "action": "", "benefit": "" },
-    { "id": "US-002", "persona": "", "action": "", "benefit": "" }
+    { "id": "US-001", "persona": "Paying Customer", "action": "complete checkout securely", "benefit": "I can purchase with confidence" },
+    { "id": "US-002", "persona": "Support Agent", "action": "access response templates", "benefit": "I can respond faster to common queries" },
+    { "id": "US-003", "persona": "Admin User", "action": "view transaction reports", "benefit": "I can track revenue and identify issues" }
   ],
   "unclearPoints": [
-    { "id": "UC-001", "issue": "", "impact": "", "suggestedResolution": "" },
-    { "id": "UC-002", "issue": "", "impact": "", "suggestedResolution": "" }
+    { "id": "UC-001", "issue": "Specific subscription tiers/pricing not defined", "impact": "Cannot implement billing logic", "suggestedResolution": "Define pricing tiers and features per tier" },
+    { "id": "UC-002", "issue": "Target response time not specified", "impact": "Cannot set SLA metrics", "suggestedResolution": "Define acceptable response time (e.g., under 2 hours)" }
   ],
   "questionsForStakeholder": [
-    { "id": "Q-001", "question": "", "context": "", "options": ["", ""] },
-    { "id": "Q-002", "question": "", "context": "", "options": ["", ""] }
+    { "id": "Q-001", "question": "What are the current baseline metrics?", "context": "Need baseline to measure improvement", "options": ["Provide current metrics", "Start fresh measurement"] },
+    { "id": "Q-002", "question": "What payment methods should be supported?", "context": "Affects integration complexity", "options": ["Cards only", "Cards + Bank Transfer", "All methods including crypto"] }
   ],
-  "assumptions": ["", ""],
-  "outOfScope": ["", ""],
-  "dependencies": ["", ""],
+  "assumptions": ["Users have stable internet connection", "Team has access to required tools"],
+  "outOfScope": ["Multi-currency support (unless specified)", "Refund automation (manual process)", "Mobile app (web only)"],
+  "dependencies": ["Payment gateway API access", "Design team availability"],
   "risks": [
-    { "risk": "", "mitigation": "" },
-    { "risk": "", "mitigation": "" }
+    { "risk": "Integration delays with third-party services", "mitigation": "Start integration early, have backup provider" },
+    { "risk": "Scope creep from unclear requirements", "mitigation": "Lock requirements before development, change request process" }
   ]
 }
 

@@ -74,10 +74,13 @@ function buildSOPPrompt(notes: string): { systemPrompt: string; userPrompt: stri
 CRITICAL RULES:
 - Create clear, numbered steps with specific actions
 - Include realistic time estimates for each step (in minutes)
-- Provide helpful tips for each step
+- Assign responsible roles/owners for each step (e.g., "HR Manager", "IT Support", "Team Lead")
+- Provide helpful tips for each step (2-3 practical tips)
+- Use checklist format for steps with multiple sub-items
 - Identify any unclear points or missing information
 - Focus on practical, actionable guidance
 - Keep steps concise but complete
+- Include a follow-up/check-in step at the end (e.g., "Day 7 check-in meeting")
 
 Return ONLY valid JSON, no markdown or extra text.`,
     userPrompt: `Transform these notes into a structured SOP (Standard Operating Procedure).
@@ -88,10 +91,12 @@ Analyze the notes and create:
 3. Step-by-step instructions with:
    - Step number
    - Clear title
-   - Detailed description
+   - Detailed description (use checklist format for multi-item steps, e.g., "Set up accounts: ☐ Email ☐ Slack ☐ GitHub ☐ Project tools")
+   - Responsible role/owner (e.g., "HR Manager", "IT Support", "Hiring Manager")
    - Estimated duration in minutes
-   - Helpful tips (2-3 per step)
+   - Helpful tips (2-3 practical tips per step)
 4. Any unclear points that need clarification
+5. A follow-up step (e.g., "Day 7 check-in meeting" or "Week 1 review")
 
 Return JSON in this EXACT format:
 {
@@ -100,13 +105,38 @@ Return JSON in this EXACT format:
   "steps": [
     {
       "stepNumber": 1,
-      "title": "Step title",
-      "description": "Detailed description of what to do",
-      "estimatedDuration": 15,
-      "tips": ["Tip 1", "Tip 2"]
+      "title": "Office Tour & Introduction",
+      "description": "Walk new employee through office layout. Show: ☐ Workstation ☐ Break room ☐ Restrooms ☐ Emergency exits ☐ Meeting rooms",
+      "owner": "HR Manager",
+      "estimatedDuration": 30,
+      "tips": ["Introduce to nearby team members", "Point out key contacts", "Provide office map if available"]
+    },
+    {
+      "stepNumber": 2,
+      "title": "System & Account Setup",
+      "description": "Set up all required accounts: ☐ Email ☐ Slack/Teams ☐ GitHub/GitLab ☐ Project management tool ☐ VPN access",
+      "owner": "IT Support",
+      "estimatedDuration": 45,
+      "tips": ["Have credentials ready beforehand", "Test each login with employee", "Bookmark important links"]
+    },
+    {
+      "stepNumber": 3,
+      "title": "Team Introduction & Role Overview",
+      "description": "Introduce to direct team members and explain role responsibilities, reporting structure, and immediate priorities",
+      "owner": "Hiring Manager",
+      "estimatedDuration": 60,
+      "tips": ["Schedule 1:1s with key collaborators", "Share team org chart", "Clarify first week expectations"]
+    },
+    {
+      "stepNumber": 4,
+      "title": "Day 7 Check-in Meeting",
+      "description": "Follow-up meeting to address questions, gather feedback, and ensure smooth onboarding. Review: ☐ Access issues ☐ Questions ☐ Feedback ☐ Next steps",
+      "owner": "HR Manager + Hiring Manager",
+      "estimatedDuration": 30,
+      "tips": ["Prepare feedback form", "Ask about blockers", "Set goals for month 1"]
     }
   ],
-  "unclearPoints": ["Point that needs clarification"]
+  "unclearPoints": ["Specific tools/software to set up", "Training schedule details", "Buddy/mentor assignment"]
 }
 
 Notes to transform:
@@ -129,6 +159,7 @@ function parseSOPResponse(content: string): SOP {
     stepNumber: (step.stepNumber as number) || index + 1,
     title: (step.title as string) || `Step ${index + 1}`,
     description: (step.description as string) || '',
+    owner: (step.owner as string) || 'Assigned Owner',
     estimatedDuration: (step.estimatedDuration as number) || 10,
     tips: (step.tips as string[]) || [],
     completed: false

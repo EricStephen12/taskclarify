@@ -331,7 +331,7 @@ export default function Dashboard() {
       result += '🎯 LONG-TERM ACTIONS:\n' + actionPlan.longTermActions.map(a => `• ${a}`).join('\n') + '\n\n';
     }
     if (actionPlan.blockers?.length > 0) {
-      result += '⚠️ BLOCKERS:\n' + actionPlan.blockers.map(b => `• ${b}`).join('\n');
+      result += '⚠️ BLOCKERS:\n' + actionPlan.blockers.map(b => `• ${b.blocker}${b.mitigation ? ` (Mitigation: ${b.mitigation})` : ''}`).join('\n');
     }
     return result.trim();
   }
@@ -915,9 +915,16 @@ Example: "The login is broken again! We told you yesterday but you didn't fix it
                           {blameProofOutput.actionPlan.blockers?.length > 0 && (
                             <div>
                               <h4 className="font-semibold text-red-700 mb-2">⚠️ Blockers</h4>
-                              <ul className="list-disc list-inside space-y-1">
-                                {blameProofOutput.actionPlan.blockers.map((blocker, i) => (
-                                  <li key={i}>{blocker}</li>
+                              <ul className="list-disc list-inside space-y-2">
+                                {blameProofOutput.actionPlan.blockers.map((item, i) => (
+                                  <li key={i}>
+                                    <span className="font-medium">{item.blocker}</span>
+                                    {item.mitigation && (
+                                      <div className="ml-5 text-sm text-gray-600 mt-1">
+                                        💡 Mitigation: {item.mitigation}
+                                      </div>
+                                    )}
+                                  </li>
                                 ))}
                               </ul>
                             </div>
@@ -1787,8 +1794,8 @@ function MeetingMinutesTab({
       // Store the generated minutes text
       setGeneratedMinutes(data.minutes || '');
       
-      // Create a MeetingMinutes object for state
-      const minutes: MeetingMinutes = {
+      // Use structured data from API if available, otherwise create basic object
+      const minutes: MeetingMinutes = data.structured || {
         id: `minutes-${Date.now()}`,
         title: 'Meeting Minutes',
         date: new Date().toISOString(),
@@ -1895,6 +1902,27 @@ function MeetingMinutesTab({
                   <h2 className="text-lg sm:text-xl font-bold text-[#111318]">Generated Minutes</h2>
                   <p className="text-sm text-[#636f88] mt-1">{new Date(output.date).toLocaleDateString()}</p>
                 </div>
+                <div className="flex gap-2">
+                  <button
+                    onClick={copyMinutesToClipboard}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-[#636f88] hover:text-[#111318] bg-gray-100 hover:bg-gray-200 rounded-lg transition-all min-h-[44px]"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                    Copy
+                  </button>
+                  <button
+                    onClick={exportMinutesAsMarkdown}
+                    className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-all min-h-[44px]"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Export
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 sm:p-6">
+              <div className="prose prose-sm max-w-none">
+                <pre className="whitespace-pre-wrap text-sm text-[#111318] bg-[#f6f6f8] p-4 rounded-xl overflow-auto">{generatedMinutes}</pre>
               </div>
             </div>
           </div>

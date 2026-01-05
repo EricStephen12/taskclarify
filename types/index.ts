@@ -276,6 +276,7 @@ export interface SOPStep {
   stepNumber: number;
   title: string;
   description: string;
+  owner?: string; // Responsible role/person
   estimatedDuration: number; // in minutes
   tips: string[];
   completed: boolean;
@@ -348,11 +349,16 @@ export interface SavedMeetingMinutes extends MeetingMinutes {
 // ============================================
 // Blame-Proof Docs Types (Enhanced for AI)
 // ============================================
+export interface BlockerItem {
+  blocker: string;
+  mitigation: string;
+}
+
 export interface ActionPlanSection {
   immediateActions: string[];
   shortTermActions: string[];
   longTermActions: string[];
-  blockers: string[];
+  blockers: BlockerItem[];
 }
 
 export interface TimelineEntry {

@@ -77,6 +77,10 @@ CRITICAL RULES:
 - Create actionable items with clear ownership
 - Maintain a collaborative tone while documenting everything
 - Include specific timestamps and details
+- Use placeholders like [Name], [Date], [Time], [Project Name] for customization
+- Include CC line suggestions in emails
+- Add "Please reply to confirm receipt" for accountability
+- Include mitigation suggestions for blockers
 
 Return ONLY valid JSON, no markdown or extra text.`,
     userPrompt: `Based on this situation, generate blame-proof documentation:
@@ -84,35 +88,46 @@ Return ONLY valid JSON, no markdown or extra text.`,
 "${input}"
 
 Analyze the situation and create:
-1. A professional paper trail email
-2. A structured action plan with immediate, short-term, and long-term actions
-3. A timeline tracker of events
+1. A professional paper trail email with:
+   - Clear subject line
+   - CC line with relevant stakeholders
+   - Specific placeholders: [Name], [Date], [Time], [Project Name]
+   - "Please reply to confirm receipt of this email and the tasks assigned" at the end
+2. A structured action plan with immediate, short-term, and long-term actions (each with owner)
+3. A timeline tracker of events (use format: "Log actual timestamp when action occurs")
 4. A meeting agenda if needed
+5. Blockers with mitigation suggestions
 
 Return JSON in this EXACT format:
 {
-  "paperTrailEmail": "Full email text with subject line",
+  "paperTrailEmail": "Subject: [Project Name] - Task Assignment & Timeline Confirmation\\n\\nTo: [Recipient Name]\\nCC: [Manager Name], [Stakeholder Name]\\n\\nHi [Name],\\n\\nFollowing our discussion on [Date], I wanted to document the agreed tasks and timeline:\\n\\n1. [Task 1] - Owner: [Name] - Due: [Date]\\n2. [Task 2] - Owner: [Name] - Due: [Date]\\n3. [Task 3] - Owner: [Name] - Due: [Date]\\n\\nBlockers identified:\\n- [Blocker 1]\\n- [Blocker 2]\\n\\nNext steps:\\n- [Next step 1]\\n- [Next step 2]\\n\\nPlease reply to confirm receipt of this email and the tasks assigned.\\n\\nBest regards,\\n[Your Name]",
   "actionPlan": {
-    "immediateActions": ["Action 1", "Action 2"],
-    "shortTermActions": ["Action 1", "Action 2"],
-    "longTermActions": ["Action 1", "Action 2"],
-    "blockers": ["Blocker 1"]
+    "immediateActions": ["[Owner]: Action 1 - Due: Today", "[Owner]: Action 2 - Due: Tomorrow"],
+    "shortTermActions": ["[Owner]: Action 1 - Due: This week", "[Owner]: Action 2 - Due: Next week"],
+    "longTermActions": ["[Owner]: Action 1 - Due: This month", "[Owner]: Action 2 - Due: Next quarter"],
+    "blockers": [
+      { "blocker": "Blocker description", "mitigation": "How to resolve or work around" }
+    ]
   },
   "timelineTracker": [
-    { "timestamp": "Date/time", "event": "What happened", "actor": "Who" }
+    { "timestamp": "[Date] [Time] - Log actual timestamp", "event": "What happened", "actor": "Who did it" },
+    { "timestamp": "[Date] [Time] - Log actual timestamp", "event": "Next event", "actor": "Who" }
   ],
   "meetingAgenda": {
     "title": "Meeting title",
     "duration": "30 mins",
     "items": [
-      { "topic": "Topic", "duration": "5 mins", "owner": "Person" }
+      { "topic": "Review current status", "duration": "5 mins", "owner": "[Name]" },
+      { "topic": "Discuss blockers", "duration": "10 mins", "owner": "[Name]" },
+      { "topic": "Assign action items", "duration": "10 mins", "owner": "[Name]" },
+      { "topic": "Confirm next steps", "duration": "5 mins", "owner": "All" }
     ],
-    "preparation": ["Prep item 1"]
+    "preparation": ["Review previous meeting notes", "Prepare status update", "List blockers and questions"]
   },
   "context": {
     "issue": "Brief issue description",
     "urgency": "low|medium|high|critical",
-    "stakeholders": ["Person 1", "Person 2"],
+    "stakeholders": ["[Name 1]", "[Name 2]"],
     "timeline": "Timeline summary"
   }
 }`
