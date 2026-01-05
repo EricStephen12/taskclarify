@@ -190,10 +190,36 @@ If SOFTWARE, BUSINESS, MARKETING, or FINANCIAL, return JSON:
   "summary": "Executive summary",
   "priority": "HIGH" | "MEDIUM" | "LOW",
   "estimatedComplexity": "Simple" | "Moderate" | "Complex",
+  "executiveSummary": {
+    "problemStatement": "Clear description of the core issue",
+    "immediateActions": ["", ""],
+    "timeline": "Overall timeline and key milestones",
+    "owners": ["", ""]
+  },
   "functionalRequirements": [
     { "id": "FR-001", "title": "", "description": "", "acceptanceCriteria": ["", ""] },
     { "id": "FR-002", "title": "", "description": "", "acceptanceCriteria": ["", ""] }
   ],
+  "timePhasedPlan": {
+    "phase1": {
+      "name": "Immediate Actions",
+      "description": "Actions to take right away",
+      "timeline": "When to complete",
+      "owners": ["", ""]
+    },
+    "phase2": {
+      "name": "Short-term Actions",
+      "description": "Actions to take next",
+      "timeline": "When to complete",
+      "owners": ["", ""]
+    },
+    "phase3": {
+      "name": "Long-term Actions",
+      "description": "Strategic follow-up actions",
+      "timeline": "When to complete",
+      "owners": ["", ""]
+    }
+  },
   "technicalRequirements": [
     { "id": "TR-001", "title": "", "description": "" },
     { "id": "TR-002", "title": "", "description": "" }
@@ -251,7 +277,7 @@ Follow this comprehensive analysis process:
 1. Identify the core activity AND any urgency/timeframe constraints or temporal indicators (e.g. 'immediate', 'urgent', 'asap', 'right now', 'this week', 'two weeks', 'phased delivery', 'long-term', 'quick fix', 'band-aid solution', 'stopgap measure' vs. 'comprehensive solution', 'strategic initiative', 'long-term plan') or collaboration needs (e.g. 'talk to X team and Y team')
 2. Define clear goals and specific needs in detail
 3. Create comprehensive budget breakdown with detailed categories, cost estimates, and financial planning
-4. Define detailed execution steps with locations, resources needed, timing, and comprehensive tips - prioritize immediate crisis response actions in early steps when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline')
+4. Define detailed execution steps with locations, resources needed, timing, and comprehensive tips - when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline'), prioritize immediate crisis response actions in early steps and structure them with clear time-bound deliverables
 5. Identify all constraints, risks, checkpoints, and potential obstacles
 6. Note any unclear points that need clarification with specific questions
 7. Address any dependencies or collaboration needs if mentioned
@@ -259,7 +285,8 @@ Follow this comprehensive analysis process:
 9. Include risk mitigation strategies and contingency plans
 10. Develop detailed timeline planning with milestones and tracking mechanisms
 11. Distinguish between immediate fixes/quick wins and long-term strategic solutions, structuring deliverables accordingly
-12. When crisis language is detected, ensure the first execution steps address immediate stabilization and include time-bound actions
+12. When crisis language is detected, ensure the summary section includes a clear executive summary with immediate actions, timeline, and owner assignments
+13. Structure execution steps with specific timeframes and measurable outcomes when crisis language is detected
 
 Return JSON in this EXACT format:
 {
@@ -335,7 +362,7 @@ Return ONLY valid JSON, no markdown or extra text.`,
 Follow this comprehensive analysis process:
 1. Identify the core business initiative AND any urgency/timeframe constraints or temporal indicators (e.g. 'immediate', 'urgent', 'asap', 'right now', 'this week', 'two weeks', 'phased delivery', 'long-term', 'quick fix', 'band-aid solution', 'stopgap measure' vs. 'comprehensive solution', 'strategic initiative', 'long-term plan') or team dynamics indicators (e.g. 'not their job', 'blame game', 'team collaboration', 'talk to X team and Y team')
 2. Define stakeholders and their specific needs in detail, including team dynamics and cultural factors (e.g. 'not their job', 'blame game', team collaboration issues)
-3. Extract all business process requirements with comprehensive acceptance criteria that are specific and measurable - prioritize immediate crisis response actions in early requirements when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline')
+3. Extract all business process requirements with comprehensive acceptance criteria that are specific and measurable - when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline'), prioritize immediate crisis response actions in early requirements and structure them with clear time-bound deliverables
 4. Identify business requirements, organizational constraints, and implementation barriers
 5. Note any unclear points that need clarification with specific questions
 6. Consider potential business risks, dependencies, scalability challenges, and team adoption challenges
@@ -344,7 +371,8 @@ Follow this comprehensive analysis process:
 9. Consider business metrics, KPIs, success measurement frameworks, and performance indicators
 10. Identify change management needs and organizational adoption strategies
 11. Distinguish between immediate fixes/quick wins and long-term strategic solutions, structuring deliverables accordingly
-12. When crisis language is detected, ensure the first business requirement addresses immediate stabilization and includes time-bound acceptance criteria
+12. When crisis language is detected, ensure the summary section includes a clear executive summary with immediate actions, timeline, and owner assignments
+13. Structure acceptance criteria with specific timeframes and measurable outcomes when crisis language is detected
 
 Return JSON in this EXACT format:
 {
@@ -432,7 +460,7 @@ Return ONLY valid JSON, no markdown or extra text.`,
 Follow this comprehensive analysis process:
 1. Identify the primary campaign objective and target audience AND any urgency/timeframe constraints or temporal indicators (e.g. 'immediate', 'urgent', 'asap', 'right now', 'this week', 'two weeks', 'phased delivery', 'long-term', 'quick fix', 'band-aid solution', 'stopgap measure' vs. 'comprehensive solution', 'strategic initiative', 'long-term plan')
 2. Define specific marketing goals and success metrics in detail
-3. Extract all campaign requirements with comprehensive measurable outcomes - prioritize immediate crisis response actions in early requirements when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline')
+3. Extract all campaign requirements with comprehensive measurable outcomes - when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline'), prioritize immediate crisis response actions in early requirements and structure them with clear time-bound deliverables
 4. Identify detailed audience personas and their specific needs, preferences, and behaviors
 5. Note any unclear points that need clarification with specific questions
 6. Consider potential marketing risks, dependencies, scalability challenges, and team adoption challenges
@@ -441,7 +469,8 @@ Follow this comprehensive analysis process:
 9. Consider competitive landscape, market positioning, and differentiation strategies
 10. Include detailed measurement frameworks, attribution models, and performance indicators
 11. Distinguish between immediate fixes/quick wins and long-term strategic solutions, structuring deliverables accordingly
-12. When crisis language is detected, ensure the first campaign requirement addresses immediate stabilization and includes time-bound acceptance criteria
+12. When crisis language is detected, ensure the summary section includes a clear executive summary with immediate actions, timeline, and owner assignments
+13. Structure acceptance criteria with specific timeframes and measurable outcomes when crisis language is detected
 
 Return JSON in this EXACT format:
 {
@@ -529,7 +558,7 @@ Return ONLY valid JSON, no markdown or extra text.`,
 Follow this comprehensive analysis process:
 1. Identify the primary financial objective and target metrics AND any urgency/timeframe constraints or temporal indicators (e.g. 'immediate', 'urgent', 'asap', 'right now', 'this week', 'two weeks', 'phased delivery', 'long-term', 'quick fix', 'band-aid solution', 'stopgap measure' vs. 'comprehensive solution', 'strategic initiative', 'long-term plan')
 2. Define specific financial goals and quantifiable targets in detail
-3. Extract all financial requirements with comprehensive measurable outcomes - prioritize immediate crisis response actions in early requirements when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline')
+3. Extract all financial requirements with comprehensive measurable outcomes - when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline'), prioritize immediate crisis response actions in early requirements and structure them with clear time-bound deliverables
 4. Identify key stakeholders and their specific financial needs and reporting requirements
 5. Note any unclear points that need clarification with specific questions
 6. Consider potential financial risks, dependencies, scalability challenges, and team adoption challenges
@@ -538,7 +567,8 @@ Follow this comprehensive analysis process:
 9. Consider regulatory compliance, audit requirements, and tax implications
 10. Include risk assessment frameworks, financial controls, and governance structures
 11. Distinguish between immediate fixes/quick wins and long-term strategic solutions, structuring deliverables accordingly
-12. When crisis language is detected, ensure the first financial requirement addresses immediate stabilization and includes time-bound acceptance criteria
+12. When crisis language is detected, ensure the summary section includes a clear executive summary with immediate actions, timeline, and owner assignments
+13. Structure acceptance criteria with specific timeframes and measurable outcomes when crisis language is detected
 
 Return JSON in this EXACT format:
 {
@@ -629,7 +659,7 @@ Return ONLY valid JSON, no markdown or extra text.`,
 Follow this comprehensive analysis process:
 1. Identify the core functionality being requested AND any urgency/timeframe constraints or temporal indicators (e.g. 'immediate', 'urgent', 'asap', 'right now', 'this week', 'two weeks', 'phased delivery', 'long-term', 'quick fix', 'band-aid solution', 'stopgap measure' vs. 'comprehensive solution', 'strategic initiative', 'long-term plan')
 2. Define user personas and their specific needs in detail, including team dynamics and cultural factors (e.g. 'not their job', 'blame game', team collaboration issues)
-3. Extract all functional requirements with comprehensive acceptance criteria that are specific and testable - prioritize immediate crisis response actions in early requirements when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline')
+3. Extract all functional requirements with comprehensive acceptance criteria that are specific and testable - when crisis language is detected (e.g. 'losing my mind', 'stressed', 'panic', 'urgent', 'bleeding', 'by [date]', 'deadline'), prioritize immediate crisis response actions in early requirements and structure them with clear time-bound deliverables
 4. Identify technical requirements, system architecture considerations, performance requirements, security needs, and constraints
 5. Note any unclear points that need clarification with specific questions
 6. Consider potential risks, dependencies, scalability challenges, and team adoption challenges
@@ -638,7 +668,8 @@ Follow this comprehensive analysis process:
 9. Consider user experience, accessibility, compliance, and monitoring requirements
 10. Identify specific implementation challenges and provide detailed guidance
 11. Distinguish between immediate fixes/quick wins and long-term strategic solutions, structuring deliverables accordingly
-12. When crisis language is detected, ensure the first functional requirement addresses immediate stabilization and includes time-bound acceptance criteria
+12. When crisis language is detected, ensure the summary section includes a clear executive summary with immediate actions, timeline, and owner assignments
+13. Structure acceptance criteria with specific timeframes and measurable outcomes when crisis language is detected
 
 Return JSON in this EXACT format:
 {
@@ -647,6 +678,32 @@ Return JSON in this EXACT format:
   "summary": "2-3 sentence executive summary of what needs to be built and why",
   "priority": "HIGH" | "MEDIUM" | "LOW",
   "estimatedComplexity": "Simple" | "Moderate" | "Complex",
+  "executiveSummary": {
+    "problemStatement": "Clear description of the core issue",
+    "immediateActions": ["Action 1", "Action 2"],
+    "timeline": "Overall timeline and key milestones",
+    "owners": ["Owner 1", "Owner 2"]
+  },
+  "timePhasedPlan": {
+    "phase1": {
+      "name": "Immediate Actions",
+      "description": "Actions to take right away",
+      "timeline": "When to complete",
+      "owners": ["Owner 1", "Owner 2"]
+    },
+    "phase2": {
+      "name": "Short-term Actions", 
+      "description": "Actions to take next",
+      "timeline": "When to complete",
+      "owners": ["Owner 1", "Owner 2"]
+    },
+    "phase3": {
+      "name": "Long-term Actions",
+      "description": "Strategic follow-up actions",
+      "timeline": "When to complete",
+      "owners": ["Owner 1", "Owner 2"]
+    }
+  },
   "functionalRequirements": [
     {
       "id": "FR-001",
@@ -744,6 +801,8 @@ function parseSoftwareRequirementResult(parsed: Record<string, unknown>): Softwa
     summary: (parsed.summary as string) || '',
     priority: (parsed.priority as SoftwareRequirementResult['priority']) || 'MEDIUM',
     estimatedComplexity: (parsed.estimatedComplexity as SoftwareRequirementResult['estimatedComplexity']) || 'Moderate',
+    executiveSummary: parsed.executiveSummary as SoftwareRequirementResult['executiveSummary'],
+    timePhasedPlan: parsed.timePhasedPlan as SoftwareRequirementResult['timePhasedPlan'],
     functionalRequirements: (parsed.functionalRequirements as SoftwareRequirementResult['functionalRequirements']) || [],
     technicalRequirements: (parsed.technicalRequirements as SoftwareRequirementResult['technicalRequirements']) || [],
     userStories: (parsed.userStories as SoftwareRequirementResult['userStories']) || [],

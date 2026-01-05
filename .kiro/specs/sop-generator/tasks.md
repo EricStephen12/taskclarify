@@ -1,0 +1,142 @@
+# Implementation Plan
+
+- [x] 1. Add TypeScript interfaces for SOP and Meeting Minutes
+  - [x] 1.1 Create SOP-related interfaces in types/index.ts
+    - Add SOPStep, SOP, SavedSOP, SOPReminder interfaces
+    - Add DashboardTab type with new tabs
+    - _Requirements: 1.1, 1.2, 2.1_
+  - [x] 1.2 Create Meeting Minutes interfaces
+    - Add MeetingMinutes, DiscussionPoint, ActionItem interfaces
+    - _Requirements: 4.3_
+  - [x] 1.3 Update BlameProofDocs interfaces for AI enhancement
+    - Add ActionPlanSection, TimelineEntry, MeetingAgendaSection interfaces
+    - _Requirements: 7.1_
+
+- [x] 2. Create SOP Generator API route
+  - [x] 2.1 Create app/api/generate-sop/route.ts
+    - Accept notes input and generate structured SOP using Groq API
+    - Return SOP with steps, durations, tips, and unclear points
+    - _Requirements: 1.1, 1.2, 1.3, 1.4_
+  - [x] 2.2 Write property test for SOP step completeness
+    - **Property 1: SOP step completeness**
+    - **Validates: Requirements 1.2**
+  - [x] 2.3 Write property test for SOP total duration calculation
+    - **Property 2: SOP total duration calculation**
+    - **Validates: Requirements 1.3**
+
+- [-] 3. Upgrade Blame-Proof Docs API to use AI
+  - [-] 3.1 Update app/api/generate-blameproof-docs/route.ts
+    - Replace template-based generation with Groq AI
+    - Generate contextual paper trail emails, action plans, timelines, meeting agendas
+    - _Requirements: 7.1, 7.2, 7.3, 7.4_
+  - [x] 3.2 Write property test for blame-proof contextual output
+    - **Property 10: Blame-proof contextual output**
+    - **Validates: Requirements 7.1, 7.4**
+
+- [x] 4. Checkpoint - Ensure all API tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 5. Create SOP storage utilities
+  - [x] 5.1 Create lib/sopStorage.ts
+    - Implement saveSOP, loadSOPs, deleteSOP, updateSOP functions
+    - Store in localStorage with unique IDs
+    - _Requirements: 2.1, 6.1, 6.2_
+  - [x] 5.2 Implement reminder time calculation
+    - Create calculateReminderTimes function
+    - Calculate sequential reminder times based on step durations
+    - _Requirements: 2.3_
+  - [x] 5.3 Write property test for saved SOP unique identifier
+    - **Property 3: Saved SOP unique identifier**
+    - **Validates: Requirements 2.1**
+  - [x] 5.4 Write property test for reminder time calculation
+    - **Property 4: Reminder time calculation**
+    - **Validates: Requirements 2.3**
+
+- [x] 6. Implement browser notification system
+  - [x] 6.1 Create lib/notifications.ts
+    - Request notification permission
+    - Send browser notifications for SOP step reminders
+    - Handle snooze functionality
+    - _Requirements: 3.1, 3.2, 3.4_
+  - [x] 6.2 Implement step completion and reminder scheduling
+    - Mark step as complete, increment currentStepIndex
+    - Schedule next step reminder
+    - _Requirements: 3.3_
+  - [x] 6.3 Write property test for step completion state transition
+    - **Property 5: Step completion state transition**
+    - **Validates: Requirements 3.3**
+  - [x] 6.4 Write property test for snooze rescheduling
+    - **Property 6: Snooze rescheduling**
+    - **Validates: Requirements 3.4**
+
+- [x] 7. Checkpoint - Ensure storage and notification tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [-] 8. Update dashboard with new tabs
+  - [-] 8.1 Add tab navigation for all 5 tabs
+    - Update activeTab state to include 'minutes' and 'sop'
+    - Add tab buttons: Clarify Tasks, Blame-Proof Docs, Meeting Minutes, SOP Generator, Saved
+    - _Requirements: 5.1, 5.2_
+  - [ ] 8.2 Implement tab state preservation
+    - Maintain state for each tab when switching
+    - Persist last active tab to localStorage
+    - _Requirements: 5.3, 5.4_
+  - [ ] 8.3 Write property test for tab state preservation
+    - **Property 7: Tab state preservation**
+    - **Validates: Requirements 5.3**
+
+- [ ] 9. Create Meeting Minutes tab UI
+  - [ ] 9.1 Build Meeting Minutes tab component
+    - Voice recording button (reuse existing recording logic)
+    - Text input for manual entry
+    - Display structured meeting minutes result
+    - Save/export functionality
+    - _Requirements: 4.1, 4.2, 4.3, 4.4_
+
+- [ ] 10. Create SOP Generator tab UI
+  - [ ] 10.1 Build SOP Generator input panel
+    - Textarea for process notes
+    - Generate SOP button
+    - Loading state
+    - _Requirements: 1.1_
+  - [ ] 10.2 Build SOP result display
+    - Show SOP name, summary, total duration
+    - Display steps with title, description, duration, tips
+    - Show unclear points section
+    - _Requirements: 1.2, 1.3, 1.4_
+  - [ ] 10.3 Build Save SOP dialog
+    - Date/time picker for start time
+    - Save button to persist SOP with reminders
+    - _Requirements: 2.2, 2.3_
+
+- [ ] 11. Create Saved SOPs management UI
+  - [ ] 11.1 Build saved SOPs list view
+    - Display SOP name, total duration, status, progress
+    - Show next scheduled step
+    - _Requirements: 2.4, 6.3_
+  - [ ] 11.2 Build SOP detail view with step checklist
+    - Interactive checklist for marking steps complete
+    - Show step details, tips, scheduled time
+    - Complete step button triggers next reminder
+    - _Requirements: 3.3, 6.3_
+  - [ ] 11.3 Build SOP management actions
+    - Delete SOP button
+    - Reschedule start time
+    - Archive completed SOPs
+    - _Requirements: 6.1, 6.2, 6.4_
+  - [ ] 11.4 Write property test for SOP progress calculation
+    - **Property 8: SOP progress calculation**
+    - **Validates: Requirements 6.3**
+  - [ ] 11.5 Write property test for SOP completion archival
+    - **Property 9: SOP completion archival**
+    - **Validates: Requirements 6.4**
+
+- [ ] 12. Create reminder notification UI
+  - [ ] 12.1 Build in-app reminder toast component
+    - Show step title, description, tips
+    - Complete button, Snooze button
+    - Fallback for when browser notifications denied
+    - _Requirements: 3.1, 3.2, 3.4_
+
+- [ ] 13. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

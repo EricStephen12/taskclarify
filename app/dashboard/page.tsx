@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { SavedNote, TaskType, FormattedResult, PersonalPlanResult, SoftwareRequirementResult } from '@/types';
+import { SavedNote, TaskType, FormattedResult, PersonalPlanResult, SoftwareRequirementResult, DashboardTab, SOP, SavedSOP, MeetingMinutes, BlameProofDocs, ActionPlanSection, TimelineEntry, MeetingAgendaSection } from '@/types';
 import { saveNote, loadNotes, deleteNote } from '@/lib/storage';
+import { saveSOP, loadSOPs, deleteSOP, markStepComplete, snoozeReminder, rescheduleSOP, getSOPProgress, archiveSOP } from '@/lib/sopStorage';
+import { requestNotificationPermission, startReminderChecker, stopReminderChecker, formatDuration, getNextReminderTime } from '@/lib/notifications';
 
 export default function Dashboard() {
   const [notes, setNotes] = useState('');
-  const [overrideType, setOverrideType] = useState<TaskType | null>(null);
   const [showOverrideMenu, setShowOverrideMenu] = useState(false);
   const [result, setResult] = useState<FormattedResult | null>(null);
   const [loading, setLoading] = useState(false);
@@ -15,10 +16,31 @@ export default function Dashboard() {
   const [savedNotes, setSavedNotes] = useState<SavedNote[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [selectedNote, setSelectedNote] = useState<SavedNote | null>(null);
-  const [activeTab, setActiveTab] = useState<'format' | 'saved'>('format');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('format');
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [currentNotes, setCurrentNotes] = useState(''); // Store notes for override
+  const [currentNotes, setCurrentNotes] = useState('');
+  
+  // Blame-Proof state
+  const [blameProofInput, setBlameProofInput] = useState('');
+  const [blameProofOutput, setBlameProofOutput] = useState<BlameProofDocs | null>(null);
+  const [blameProofLoading, setBlameProofLoading] = useState(false);
+  
+  // Meeting Minutes state
+  const [minutesInput, setMinutesInput] = useState('');
+  const [minutesOutput, setMinutesOutput] = useState<MeetingMinutes | null>(null);
+  const [minutesLoading, setMinutesLoading] = useState(false);
+  
+  // SOP Generator state
+  const [sopInput, setSopInput] = useState('');
+  const [sopOutput, setSopOutput] = useState<SOP | null>(null);
+  const [sopLoading, setSopLoading] = useState(false);
+  const [savedSOPs, setSavedSOPs] = useState<SavedSOP[]>([]);
+  const [selectedSOP, setSelectedSOP] = useState<SavedSOP | null>(null);
+  const [showSaveSOPDialog, setShowSaveSOPDialog] = useState(false);
+  const [sopStartTime, setSopStartTime] = useState('');
+  const [activeReminder, setActiveReminder] = useState<{ sop: SavedSOP; stepId: string } | null>(null);
+  
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -26,6 +48,24 @@ export default function Dashboard() {
   useEffect(() => {
     const notes = loadNotes();
     setSavedNotes(Array.isArray(notes) ? notes : []);
+    const sops = loadSOPs();
+    setSavedSOPs(Array.isArray(sops) ? sops : []);
+    
+    // Request notification permission
+    requestNotificationPermission();
+    
+    // Start reminder checker
+    startReminderChecker(
+      () => loadSOPs(),
+      {
+        onReminder: (sop, step) => {
+          setActiveReminder({ sop, stepId: step.id });
+          setToast(`Reminder: ${step.title}`);
+        }
+      }
+    );
+    
+    return () => stopReminderChecker();
   }, []);
 
   useEffect(() => {
@@ -78,13 +118,38 @@ export default function Dashboard() {
       const res = await fetch('/api/transcribe', { method: 'POST', body: formData });
       const data = await res.json();
       if (data.text) {
-        setNotes(prev => prev ? `${prev} ${data.text}` : data.text);
-        setToast('Transcription complete!');
+        // Process the transcription for meeting minutes
+        const processedText = await processMeetingMinutes(data.text);
+        setNotes(prev => prev ? `${prev} ${processedText}` : processedText);
+        setToast('Meeting minutes processed!');
       } else {
         setToast('Transcription failed');
       }
     } catch {
       setToast('Transcription error');
+    }
+  }
+  
+  async function processMeetingMinutes(transcript: string) {
+    // Send the transcript to our API for processing into meeting minutes
+    try {
+      const res = await fetch('/api/process-minutes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript })
+      });
+      
+      const data = await res.json();
+      
+      if (res.ok) {
+        return data.minutes || transcript; // Return processed minutes or original if processing failed
+      } else {
+        // If processing fails, return original transcript
+        return transcript;
+      }
+    } catch (error) {
+      console.error('Error processing meeting minutes:', error);
+      return transcript; // Return original if API call fails
     }
   }
 
@@ -152,6 +217,96 @@ export default function Dashboard() {
     const a = document.createElement('a');
     a.href = url;
     a.download = `${result.taskName.replace(/\s+/g, '-').toLowerCase()}-requirements.md`;
+    a.click();
+    setToast('Exported as Markdown!');
+  }
+  
+  async function handleGenerateBlameProofDocs() {
+    if (!blameProofInput.trim()) return;
+    
+    setBlameProofLoading(true);
+    setError(null);
+    
+    try {
+      // Call the API to generate blame-proof documents
+      const res = await fetch('/api/generate-blameproof-docs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ input: blameProofInput })
+      });
+      
+      const data = await res.json();
+      
+      if (!res.ok) {
+        setError(data.error || 'Something went wrong');
+        return;
+      }
+      
+      setBlameProofOutput(data);
+      setToast('Blame-proof documents generated!');
+    } catch (err) {
+      setError('Network error. Please try again.');
+    } finally {
+      setBlameProofLoading(false);
+    }
+  }
+  
+  function copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text);
+    setToast('Copied to clipboard!');
+  }
+  
+  function formatActionPlan(actionPlan: ActionPlanSection): string {
+    let result = '';
+    if (actionPlan.immediateActions?.length > 0) {
+      result += '🚨 IMMEDIATE ACTIONS:\n' + actionPlan.immediateActions.map(a => `• ${a}`).join('\n') + '\n\n';
+    }
+    if (actionPlan.shortTermActions?.length > 0) {
+      result += '📅 SHORT-TERM ACTIONS:\n' + actionPlan.shortTermActions.map(a => `• ${a}`).join('\n') + '\n\n';
+    }
+    if (actionPlan.longTermActions?.length > 0) {
+      result += '🎯 LONG-TERM ACTIONS:\n' + actionPlan.longTermActions.map(a => `• ${a}`).join('\n') + '\n\n';
+    }
+    if (actionPlan.blockers?.length > 0) {
+      result += '⚠️ BLOCKERS:\n' + actionPlan.blockers.map(b => `• ${b}`).join('\n');
+    }
+    return result.trim();
+  }
+  
+  function formatTimeline(timeline: TimelineEntry[]): string {
+    if (!timeline?.length) return 'No timeline entries';
+    return timeline.map(entry => `[${entry.timestamp}] ${entry.actor}: ${entry.event}`).join('\n');
+  }
+  
+  function formatMeetingAgenda(agenda: MeetingAgendaSection): string {
+    let result = `📋 ${agenda.title} (${agenda.duration})\n\n`;
+    if (agenda.items?.length > 0) {
+      result += 'AGENDA ITEMS:\n';
+      agenda.items.forEach((item, i) => {
+        result += `${i + 1}. ${item.topic} (${item.duration} - ${item.owner})\n`;
+      });
+      result += '\n';
+    }
+    if (agenda.preparation?.length > 0) {
+      result += 'PREPARATION:\n' + agenda.preparation.map(p => `• ${p}`).join('\n');
+    }
+    return result.trim();
+  }
+  
+  function exportBlameProofAsMarkdown() {
+    if (!blameProofOutput) return;
+    
+    let md = `# Blame-Proof Documents\n\n`;
+    md += `## Paper Trail Email\n\n${blameProofOutput.paperTrailEmail}\n\n`;
+    md += `## Action Plan\n\n${formatActionPlan(blameProofOutput.actionPlan)}\n\n`;
+    md += `## Timeline Tracker\n\n${formatTimeline(blameProofOutput.timelineTracker)}\n\n`;
+    md += `## Meeting Agenda\n\n${formatMeetingAgenda(blameProofOutput.meetingAgenda)}\n\n`;
+    
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'blame-proof-documents.md';
     a.click();
     setToast('Exported as Markdown!');
   }
@@ -328,13 +483,22 @@ ${r.description}
             <p className="text-[#636f88] mt-1 text-sm sm:text-base">Transform messy notes into professional requirements documents</p>
           </div>
 
-          <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-full sm:w-fit mb-6 sm:mb-8">
-            <button onClick={() => setActiveTab('format')} className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${activeTab === 'format' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
-              New Document
+          <div className="flex flex-wrap gap-1 p-1 bg-gray-100 rounded-xl w-full sm:w-fit mb-6 sm:mb-8">
+            <button onClick={() => setActiveTab('format')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${activeTab === 'format' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+              Clarify Tasks
             </button>
-            <button onClick={() => setActiveTab('saved')} className={`flex-1 sm:flex-none px-4 sm:px-6 py-3 sm:py-2.5 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 min-h-[44px] ${activeTab === 'saved' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+            <button onClick={() => setActiveTab('blameproof')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${activeTab === 'blameproof' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+              Blame-Proof
+            </button>
+            <button onClick={() => setActiveTab('minutes')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${activeTab === 'minutes' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+              Minutes
+            </button>
+            <button onClick={() => setActiveTab('sop')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all min-h-[44px] ${activeTab === 'sop' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
+              SOP
+            </button>
+            <button onClick={() => setActiveTab('saved')} className={`flex-1 sm:flex-none px-3 sm:px-4 py-2.5 sm:py-2 rounded-lg text-sm font-medium transition-all flex items-center justify-center gap-2 min-h-[44px] ${activeTab === 'saved' ? 'bg-white text-[#111318] shadow-sm' : 'text-[#636f88] hover:text-[#111318]'}`}>
               Saved
-              {savedNotes.length > 0 && <span className="px-2 py-0.5 bg-[#185adc]/10 text-[#185adc] rounded-full text-xs">{savedNotes.length}</span>}
+              {(savedNotes.length + savedSOPs.length) > 0 && <span className="px-2 py-0.5 bg-[#185adc]/10 text-[#185adc] rounded-full text-xs">{savedNotes.length + savedSOPs.length}</span>}
             </button>
           </div>
 
@@ -524,13 +688,303 @@ ${r.description}
                       </svg>
                     </div>
                     <h3 className="text-lg sm:text-xl font-semibold text-[#111318] mb-2">No Document Generated</h3>
-                    <p className="text-[#636f88] max-w-md mx-auto text-sm sm:text-base">Paste your meeting notes or use voice input, then click &quot;Generate Requirements Document&quot;</p>
+                    <p className="text-[#636f88] max-w-md mx-auto text-sm sm:text-base">Paste your meeting notes or use voice input, then click "Generate Requirements Document"</p>
                   </div>
                 )}
               </div>
             </div>
+          ) : activeTab === 'blameproof' ? (
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
+              {/* Input Panel */}
+              <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                  <div className="p-4 sm:p-5 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-[#e74c3c]/10 text-[#e74c3c] flex items-center justify-center flex-shrink-0">
+                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.364 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <h2 className="font-semibold text-[#111318]">Blame-Proof Input</h2>
+                        <p className="text-sm text-[#636f88] hidden sm:block">Paste blame/accusation/vague requests</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-4 sm:p-5">
+                    <textarea
+                      value={blameProofInput}
+                      onChange={(e) => setBlameProofInput(e.target.value)}
+                      placeholder={`Paste the messy blame/accusation/vague request here...
+
+Example: "The login is broken again! We told you yesterday but you didn't fix it!"`}
+                      className="w-full h-40 sm:h-48 p-3 sm:p-4 bg-[#f6f6f8] border-0 rounded-xl resize-none focus:ring-2 focus:ring-[#e74c3c]/20 focus:bg-white transition-all text-[#111318] placeholder:text-[#636f88]/60 text-sm"
+                    />
+                    
+                    <button
+                      onClick={handleGenerateBlameProofDocs}
+                      disabled={blameProofLoading || !blameProofInput.trim()}
+                      className="w-full mt-4 flex items-center justify-center gap-2 px-6 py-4 sm:py-3.5 bg-[#e74c3c] text-white rounded-xl font-medium hover:bg-[#c0392b] disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-[#e74c3c]/25 min-h-[44px]"
+                    >
+                      {blameProofLoading ? (
+                        <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Generating...</>
+                      ) : (
+                        <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>Generate Blame-Proof Docs</>
+                      )}
+                    </button>
+                    
+                    <p className="text-xs text-[#636f88] text-center mt-2">Creates 4 defensive documents to protect you from workplace politics</p>
+                  </div>
+                </div>
+                {error && (
+                  <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm flex items-center gap-2">
+                    <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/></svg>
+                    {error}
+                  </div>
+                )}
+              </div>
+
+              {/* Results Panel */}
+              <div className="lg:col-span-3">
+                {blameProofOutput ? (
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-[#e74c3c]/5 to-transparent">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                        <div>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="px-2.5 py-1 text-xs font-bold rounded-full uppercase tracking-wider bg-red-100 text-red-700">Blame-Proof</span>
+                          </div>
+                          <h2 className="text-lg sm:text-xl font-bold text-[#111318]">Defensive Documents Generated</h2>
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={exportBlameProofAsMarkdown} className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-3 py-2.5 sm:py-2 bg-white border border-gray-200 text-[#636f88] rounded-lg text-sm font-medium hover:bg-gray-50 transition min-h-[44px]">
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>Export
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 sm:p-6 space-y-6 max-h-[60vh] sm:max-h-[65vh] overflow-y-auto">
+                      {/* Paper Trail Email */}
+                      <section>
+                        <h3 className="text-sm font-bold text-[#111318] uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded flex items-center justify-center text-xs">📧</span>
+                          Paper Trail Email
+                        </h3>
+                        <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 whitespace-pre-wrap text-sm text-blue-900">
+                          {blameProofOutput.paperTrailEmail}
+                        </div>
+                        <div className="mt-2 flex justify-end">
+                          <button 
+                            onClick={() => copyToClipboard(blameProofOutput.paperTrailEmail)}
+                            className="text-xs text-blue-600 hover:text-blue-800 underline"
+                          >
+                            Copy to clipboard
+                          </button>
+                        </div>
+                      </section>
+
+                      {/* Action Plan */}
+                      <section>
+                        <h3 className="text-sm font-bold text-[#111318] uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-green-100 text-green-600 rounded flex items-center justify-center text-xs">📋</span>
+                          Action Plan
+                        </h3>
+                        <div className="p-4 bg-green-50 rounded-xl border border-green-100 text-sm text-green-900 space-y-4">
+                          {blameProofOutput.actionPlan.immediateActions?.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold text-green-800 mb-2">🚨 Immediate Actions</h4>
+                              <ul className="list-disc list-inside space-y-1">
+                                {blameProofOutput.actionPlan.immediateActions.map((action, i) => (
+                                  <li key={i}>{action}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {blameProofOutput.actionPlan.shortTermActions?.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold text-green-800 mb-2">📅 Short-Term Actions</h4>
+                              <ul className="list-disc list-inside space-y-1">
+                                {blameProofOutput.actionPlan.shortTermActions.map((action, i) => (
+                                  <li key={i}>{action}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {blameProofOutput.actionPlan.longTermActions?.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold text-green-800 mb-2">🎯 Long-Term Actions</h4>
+                              <ul className="list-disc list-inside space-y-1">
+                                {blameProofOutput.actionPlan.longTermActions.map((action, i) => (
+                                  <li key={i}>{action}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {blameProofOutput.actionPlan.blockers?.length > 0 && (
+                            <div>
+                              <h4 className="font-semibold text-red-700 mb-2">⚠️ Blockers</h4>
+                              <ul className="list-disc list-inside space-y-1">
+                                {blameProofOutput.actionPlan.blockers.map((blocker, i) => (
+                                  <li key={i}>{blocker}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-2 flex justify-end">
+                          <button 
+                            onClick={() => copyToClipboard(formatActionPlan(blameProofOutput.actionPlan))}
+                            className="text-xs text-green-600 hover:text-green-800 underline"
+                          >
+                            Copy to clipboard
+                          </button>
+                        </div>
+                      </section>
+
+                      {/* Timeline Tracker */}
+                      <section>
+                        <h3 className="text-sm font-bold text-[#111318] uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-purple-100 text-purple-600 rounded flex items-center justify-center text-xs">⏰</span>
+                          Timeline Tracker
+                        </h3>
+                        <div className="p-4 bg-purple-50 rounded-xl border border-purple-100 text-sm text-purple-900">
+                          {blameProofOutput.timelineTracker?.length > 0 ? (
+                            <div className="space-y-2">
+                              {blameProofOutput.timelineTracker.map((entry, i) => (
+                                <div key={i} className="flex items-start gap-3 pb-2 border-b border-purple-100 last:border-0">
+                                  <span className="text-xs font-mono text-purple-600 whitespace-nowrap">{entry.timestamp}</span>
+                                  <span className="font-medium text-purple-800">{entry.actor}:</span>
+                                  <span>{entry.event}</span>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-purple-600 italic">No timeline entries</p>
+                          )}
+                        </div>
+                        <div className="mt-2 flex justify-end">
+                          <button 
+                            onClick={() => copyToClipboard(formatTimeline(blameProofOutput.timelineTracker))}
+                            className="text-xs text-purple-600 hover:text-purple-800 underline"
+                          >
+                            Copy to clipboard
+                          </button>
+                        </div>
+                      </section>
+
+                      {/* Meeting Agenda */}
+                      <section>
+                        <h3 className="text-sm font-bold text-[#111318] uppercase tracking-wider mb-4 flex items-center gap-2">
+                          <span className="w-6 h-6 bg-amber-100 text-amber-600 rounded flex items-center justify-center text-xs">🎯</span>
+                          Meeting Agenda
+                        </h3>
+                        <div className="p-4 bg-amber-50 rounded-xl border border-amber-100 text-sm text-amber-900 space-y-3">
+                          <div className="flex justify-between items-center pb-2 border-b border-amber-200">
+                            <h4 className="font-semibold text-amber-800">{blameProofOutput.meetingAgenda.title}</h4>
+                            <span className="text-xs bg-amber-200 text-amber-800 px-2 py-1 rounded">{blameProofOutput.meetingAgenda.duration}</span>
+                          </div>
+                          {blameProofOutput.meetingAgenda.items?.length > 0 && (
+                            <div>
+                              <h5 className="font-medium text-amber-700 mb-2">Agenda Items:</h5>
+                              <ul className="space-y-2">
+                                {blameProofOutput.meetingAgenda.items.map((item, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <span className="text-amber-500">{i + 1}.</span>
+                                    <div>
+                                      <span className="font-medium">{item.topic}</span>
+                                      <span className="text-amber-600 text-xs ml-2">({item.duration} - {item.owner})</span>
+                                    </div>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                          {blameProofOutput.meetingAgenda.preparation?.length > 0 && (
+                            <div>
+                              <h5 className="font-medium text-amber-700 mb-2">Preparation:</h5>
+                              <ul className="list-disc list-inside space-y-1">
+                                {blameProofOutput.meetingAgenda.preparation.map((prep, i) => (
+                                  <li key={i}>{prep}</li>
+                                ))}
+                              </ul>
+                            </div>
+                          )}
+                        </div>
+                        <div className="mt-2 flex justify-end">
+                          <button 
+                            onClick={() => copyToClipboard(formatMeetingAgenda(blameProofOutput.meetingAgenda))}
+                            className="text-xs text-amber-600 hover:text-amber-800 underline"
+                          >
+                            Copy to clipboard
+                          </button>
+                        </div>
+                      </section>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-16 text-center">
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#f6f6f8] rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+                      <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#636f88]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.464 0L4.364 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-lg sm:text-xl font-semibold text-[#111318] mb-2">No Documents Generated</h3>
+                    <p className="text-[#636f88] max-w-md mx-auto text-sm sm:text-base">Paste the messy blame/accusation/vague request, then click "Generate Blame-Proof Docs"</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : activeTab === 'minutes' ? (
+            <MeetingMinutesTab
+              input={minutesInput}
+              setInput={setMinutesInput}
+              output={minutesOutput}
+              setOutput={setMinutesOutput}
+              loading={minutesLoading}
+              setLoading={setMinutesLoading}
+              error={error}
+              setError={setError}
+              setToast={setToast}
+              isRecording={isRecording}
+              recordingTime={recordingTime}
+              startRecording={startRecording}
+              stopRecording={stopRecording}
+              formatTime={formatTime}
+            />
+          ) : activeTab === 'sop' ? (
+            <SOPGeneratorTab
+              input={sopInput}
+              setInput={setSopInput}
+              output={sopOutput}
+              setOutput={setSopOutput}
+              loading={sopLoading}
+              setLoading={setSopLoading}
+              error={error}
+              setError={setError}
+              setToast={setToast}
+              savedSOPs={savedSOPs}
+              setSavedSOPs={setSavedSOPs}
+              showSaveDialog={showSaveSOPDialog}
+              setShowSaveDialog={setShowSaveSOPDialog}
+              startTime={sopStartTime}
+              setStartTime={setSopStartTime}
+              selectedSOP={selectedSOP}
+              setSelectedSOP={setSelectedSOP}
+            />
           ) : (
-            <SavedDocumentsGrid notes={savedNotes} onSelect={setSelectedNote} onDelete={handleDelete} />
+            <SavedDocumentsGrid 
+              notes={savedNotes} 
+              sops={savedSOPs}
+              onSelectNote={setSelectedNote} 
+              onDeleteNote={handleDelete}
+              onSelectSOP={setSelectedSOP}
+              onDeleteSOP={(id) => {
+                deleteSOP(id);
+                setSavedSOPs(savedSOPs.filter(s => s.id !== id));
+                setToast('SOP deleted');
+              }}
+            />
           )}
         </div>
       </main>
@@ -757,8 +1211,22 @@ ${r.description}
   );
 }
 
-function SavedDocumentsGrid({ notes, onSelect, onDelete }: { notes: SavedNote[]; onSelect: (note: SavedNote) => void; onDelete: (id: string) => void }) {
-  if (notes.length === 0) {
+function SavedDocumentsGrid({ 
+  notes, 
+  sops, 
+  onSelectNote, 
+  onDeleteNote, 
+  onSelectSOP, 
+  onDeleteSOP 
+}: { 
+  notes: SavedNote[]; 
+  sops: SavedSOP[];
+  onSelectNote: (note: SavedNote) => void; 
+  onDeleteNote: (id: string) => void;
+  onSelectSOP: (sop: SavedSOP) => void;
+  onDeleteSOP: (id: string) => void;
+}) {
+  if (notes.length === 0 && sops.length === 0) {
     return (
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-16 text-center">
         <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#f6f6f8] rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
@@ -773,33 +1241,42 @@ function SavedDocumentsGrid({ notes, onSelect, onDelete }: { notes: SavedNote[];
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {notes.map(note => (
-        <div key={note.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelect(note)}>
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex flex-wrap gap-1">
-              <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${note.priority === 'HIGH' ? 'bg-red-100 text-red-700' : note.priority === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>{note.priority}</span>
-              <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${note.detectedType === 'personal' ? 'bg-green-100 text-green-700' :
-                   note.detectedType === 'software' ? 'bg-[#185adc]/10 text-[#185adc]' :
-                   note.detectedType === 'business' ? 'bg-purple-100 text-purple-700' :
-                   note.detectedType === 'marketing' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                {note.detectedType === 'personal' ? 'Personal' :
-                 note.detectedType === 'software' ? 'Software' :
-                 note.detectedType === 'business' ? 'Business' :
-                 note.detectedType === 'marketing' ? 'Marketing' : 'Financial'}</span>
-            </div>
-            <button onClick={(e) => { e.stopPropagation(); onDelete(note.id); }} className="w-8 h-8 flex items-center justify-center rounded hover:bg-red-50 text-[#636f88] hover:text-red-500 transition min-h-[44px] min-w-[44px]">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-            </button>
-          </div>
-          <h3 className="font-semibold text-[#111318] mb-1 line-clamp-2">{note.taskName}</h3>
-          <p className="text-sm text-[#636f88] line-clamp-2 mb-3">{note.summary}</p>
-          <div className="flex items-center justify-between text-xs text-[#636f88]">
-            <span>{new Date(note.createdAt).toLocaleDateString()}</span>
-            <span>{note.functionalRequirements.length} requirements</span>
+    <div className="space-y-6">
+      {/* Saved Notes */}
+      {notes.length > 0 && (
+        <div>
+          <h3 className="text-sm font-bold text-[#636f88] uppercase tracking-wider mb-4">Saved Documents ({notes.length})</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {notes.map(note => (
+              <div key={note.id} className="bg-white rounded-xl border border-gray-100 shadow-sm p-4 hover:shadow-md transition-shadow cursor-pointer" onClick={() => onSelectNote(note)}>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex flex-wrap gap-1">
+                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${note.priority === 'HIGH' ? 'bg-red-100 text-red-700' : note.priority === 'MEDIUM' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>{note.priority}</span>
+                    <span className={`px-2 py-0.5 text-xs font-bold rounded-full ${note.detectedType === 'personal' ? 'bg-green-100 text-green-700' :
+                         note.detectedType === 'software' ? 'bg-[#185adc]/10 text-[#185adc]' :
+                         note.detectedType === 'business' ? 'bg-purple-100 text-purple-700' :
+                         note.detectedType === 'marketing' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                      {note.detectedType === 'personal' ? 'Personal' :
+                       note.detectedType === 'software' ? 'Software' :
+                       note.detectedType === 'business' ? 'Business' :
+                       note.detectedType === 'marketing' ? 'Marketing' : 'Financial'}
+                    </span>
+                  </div>
+                  <button onClick={(e) => { e.stopPropagation(); onDeleteNote(note.id); }} className="w-8 h-8 flex items-center justify-center rounded hover:bg-red-50 text-[#636f88] hover:text-red-500 transition min-h-[44px] min-w-[44px]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                  </button>
+                </div>
+                <h3 className="font-semibold text-[#111318] mb-1 line-clamp-2">{note.taskName}</h3>
+                <p className="text-sm text-[#636f88] line-clamp-2 mb-3">{note.summary}</p>
+                <div className="flex items-center justify-between text-xs text-[#636f88]">
+                  <span>{new Date(note.createdAt).toLocaleDateString()}</span>
+                  <span>{note.functionalRequirements.length} requirements</span>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }
@@ -1134,5 +1611,375 @@ function SoftwareRequirementRenderer({ result }: { result: SoftwareRequirementRe
         </section>
       )}
     </>
+  );
+}
+
+// Meeting Minutes Tab Component
+function MeetingMinutesTab({
+  input, setInput, output, setOutput, loading, setLoading, error, setError, setToast,
+  isRecording, recordingTime, startRecording, stopRecording, formatTime
+}: {
+  input: string;
+  setInput: (v: string) => void;
+  output: MeetingMinutes | null;
+  setOutput: (v: MeetingMinutes | null) => void;
+  loading: boolean;
+  setLoading: (v: boolean) => void;
+  error: string | null;
+  setError: (v: string | null) => void;
+  setToast: (v: string | null) => void;
+  isRecording: boolean;
+  recordingTime: number;
+  startRecording: () => void;
+  stopRecording: () => void;
+  formatTime: (s: number) => string;
+}) {
+  const [generatedMinutes, setGeneratedMinutes] = useState<string>('');
+  
+  async function handleGenerate() {
+    if (!input.trim()) return;
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const res = await fetch('/api/process-minutes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ transcript: input })
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Something went wrong'); return; }
+      
+      // Store the generated minutes text
+      setGeneratedMinutes(data.minutes || '');
+      
+      // Create a MeetingMinutes object for state
+      const minutes: MeetingMinutes = {
+        id: `minutes-${Date.now()}`,
+        title: 'Meeting Minutes',
+        date: new Date().toISOString(),
+        attendees: [],
+        agendaItems: [],
+        discussionPoints: [],
+        actionItems: [],
+        decisions: [],
+        nextSteps: [],
+        rawTranscript: input,
+        createdAt: new Date().toISOString()
+      };
+      
+      setOutput(minutes);
+      setToast('Meeting minutes generated!');
+    } catch { setError('Network error. Please try again.'); }
+    finally { setLoading(false); }
+  }
+  
+  function copyMinutesToClipboard() {
+    navigator.clipboard.writeText(generatedMinutes);
+    setToast('Copied to clipboard!');
+  }
+  
+  function exportMinutesAsMarkdown() {
+    const blob = new Blob([generatedMinutes], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `meeting-minutes-${new Date().toISOString().split('T')[0]}.md`;
+    a.click();
+    setToast('Exported as Markdown!');
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
+      <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="font-semibold text-[#111318]">Meeting Minutes</h2>
+                <p className="text-sm text-[#636f88] hidden sm:block">Record or paste meeting transcript</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4 sm:p-5">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Paste your meeting transcript or use voice recording..."
+              className="w-full h-40 sm:h-48 p-3 sm:p-4 bg-[#f6f6f8] border-0 rounded-xl resize-none focus:ring-2 focus:ring-indigo-500/20 focus:bg-white transition-all text-[#111318] placeholder:text-[#636f88]/60 text-sm"
+            />
+            
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mt-4 p-3 bg-[#f6f6f8] rounded-xl">
+              <button
+                onClick={isRecording ? stopRecording : startRecording}
+                className={`flex items-center justify-center gap-2 px-4 py-3 sm:py-2.5 rounded-lg text-sm font-medium transition-all min-h-[44px] ${
+                  isRecording ? 'bg-red-500 text-white animate-pulse' : 'bg-white text-[#636f88] hover:text-indigo-600 border border-gray-200'
+                }`}
+              >
+                {isRecording ? (
+                  <><span className="w-2 h-2 bg-white rounded-full"></span>Stop • {formatTime(recordingTime)}</>
+                ) : (
+                  <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd"/></svg>Voice Input</>
+                )}
+              </button>
+              <span className="text-xs text-[#636f88] text-center sm:text-left">{input.length} characters</span>
+            </div>
+
+            <button
+              onClick={handleGenerate}
+              disabled={loading || !input.trim()}
+              className="w-full mt-4 flex items-center justify-center gap-2 px-6 py-4 sm:py-3.5 bg-indigo-600 text-white rounded-xl font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-indigo-600/25 min-h-[44px]"
+            >
+              {loading ? (
+                <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Processing...</>
+              ) : (
+                <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>Generate Minutes</>
+              )}
+            </button>
+          </div>
+        </div>
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm flex items-center gap-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/></svg>
+            {error}
+          </div>
+        )}
+      </div>
+
+      <div className="lg:col-span-3">
+        {output && generatedMinutes ? (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-indigo-500/5 to-transparent">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+                <div>
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-full uppercase tracking-wider bg-indigo-100 text-indigo-700 mb-2 inline-block">Meeting Minutes</span>
+                  <h2 className="text-lg sm:text-xl font-bold text-[#111318]">Generated Minutes</h2>
+                  <p className="text-sm text-[#636f88] mt-1">{new Date(output.date).toLocaleDateString()}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-16 text-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#f6f6f8] rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#636f88]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+              </svg>
+            </div>
+            <h3 className="text-lg sm:text-xl font-semibold text-[#111318] mb-2">No Minutes Generated</h3>
+            <p className="text-[#636f88] max-w-md mx-auto text-sm sm:text-base">Record a meeting or paste a transcript to generate structured minutes</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+
+// SOP Generator Tab Component  
+function SOPGeneratorTab({
+  input, setInput, output, setOutput, loading, setLoading, error, setError, setToast,
+  savedSOPs, setSavedSOPs, showSaveDialog, setShowSaveDialog, startTime, setStartTime,
+  selectedSOP, setSelectedSOP
+}: {
+  input: string;
+  setInput: (v: string) => void;
+  output: SOP | null;
+  setOutput: (v: SOP | null) => void;
+  loading: boolean;
+  setLoading: (v: boolean) => void;
+  error: string | null;
+  setError: (v: string | null) => void;
+  setToast: (v: string | null) => void;
+  savedSOPs: SavedSOP[];
+  setSavedSOPs: (v: SavedSOP[]) => void;
+  showSaveDialog: boolean;
+  setShowSaveDialog: (v: boolean) => void;
+  startTime: string;
+  setStartTime: (v: string) => void;
+  selectedSOP: SavedSOP | null;
+  setSelectedSOP: (v: SavedSOP | null) => void;
+}) {
+  async function handleGenerate() {
+    if (!input.trim()) return;
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const res = await fetch('/api/generate-sop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notes: input })
+      });
+      const data = await res.json();
+      if (!res.ok) { setError(data.error || 'Something went wrong'); return; }
+      setOutput(data);
+      setToast('SOP generated!');
+    } catch { setError('Network error. Please try again.'); }
+    finally { setLoading(false); }
+  }
+
+  function handleSaveSOP() {
+    if (!output || !startTime) return;
+    const saved = saveSOP(output, new Date(startTime));
+    setSavedSOPs([saved, ...savedSOPs]);
+    setOutput(null);
+    setInput('');
+    setStartTime('');
+    setShowSaveDialog(false);
+    setToast('SOP saved with reminders!');
+  }
+
+  return (
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 sm:gap-8">
+      <div className="lg:col-span-2 space-y-4 sm:space-y-6">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <div className="p-4 sm:p-5 border-b border-gray-100">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+              </div>
+              <div>
+                <h2 className="font-semibold text-[#111318]">SOP Generator</h2>
+                <p className="text-sm text-[#636f88] hidden sm:block">Create step-by-step procedures</p>
+              </div>
+            </div>
+          </div>
+          <div className="p-4 sm:p-5">
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Describe the process you want to create an SOP for..."
+              className="w-full h-40 sm:h-48 p-3 sm:p-4 bg-[#f6f6f8] border-0 rounded-xl resize-none focus:ring-2 focus:ring-emerald-500/20 focus:bg-white transition-all text-[#111318] placeholder:text-[#636f88]/60 text-sm"
+            />
+            <button
+              onClick={handleGenerate}
+              disabled={loading || !input.trim()}
+              className="w-full mt-4 flex items-center justify-center gap-2 px-6 py-4 sm:py-3.5 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg shadow-emerald-600/25 min-h-[44px]"
+            >
+              {loading ? (
+                <><svg className="animate-spin h-4 w-4" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>Generating...</>
+              ) : (
+                <><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/></svg>Generate SOP</>
+              )}
+            </button>
+          </div>
+        </div>
+        {error && (
+          <div className="p-4 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm flex items-center gap-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/></svg>
+            {error}
+          </div>
+        )}
+      </div>
+
+      <div className="lg:col-span-3">
+        {output ? (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-emerald-50/50 to-transparent">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+                <div>
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-full uppercase tracking-wider bg-emerald-100 text-emerald-700 mb-2 inline-block">SOP</span>
+                  <h2 className="text-lg sm:text-xl font-bold text-[#111318]">{output.name}</h2>
+                  <p className="text-sm text-[#636f88] mt-1">Total: {formatDuration(output.totalDuration)} • {output.steps.length} steps</p>
+                </div>
+                <button
+                  onClick={() => setShowSaveDialog(true)}
+                  className="flex items-center justify-center gap-1.5 px-4 py-2.5 sm:py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition min-h-[44px]"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                  Save & Schedule
+                </button>
+              </div>
+              <p className="text-sm text-[#636f88]">{output.summary}</p>
+            </div>
+            <div className="p-4 sm:p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+              {output.steps.map((step) => (
+                <div key={step.id} className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div className="flex items-start gap-3">
+                    <span className="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">{step.stepNumber}</span>
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-emerald-900">{step.title}</h4>
+                      <p className="text-sm text-emerald-700 mt-1">{step.description}</p>
+                      <div className="flex items-center gap-4 mt-2 text-xs text-emerald-600">
+                        <span>⏱ {formatDuration(step.estimatedDuration)}</span>
+                      </div>
+                      {step.tips && step.tips.length > 0 && (
+                        <div className="mt-2 space-y-1">
+                          {step.tips.map((tip, i) => (
+                            <p key={i} className="text-xs text-emerald-600 flex items-start gap-1">
+                              <span>💡</span>{tip}
+                            </p>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {output.unclearPoints.length > 0 && (
+                <div className="p-4 bg-amber-50 rounded-xl border border-amber-100">
+                  <h4 className="font-semibold text-amber-900 mb-2">⚠️ Unclear Points</h4>
+                  <ul className="space-y-1">
+                    {output.unclearPoints.map((point, i) => (
+                      <li key={i} className="text-sm text-amber-700">• {point}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8 sm:p-16 text-center">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-[#f6f6f8] rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+              <svg className="w-8 h-8 sm:w-10 sm:h-10 text-[#636f88]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+              </svg>
+            </div>
+            <h3 className="text-lg sm:text-xl font-semibold text-[#111318] mb-2">No SOP Generated</h3>
+            <p className="text-[#636f88] max-w-md mx-auto text-sm sm:text-base">Describe a process to generate a step-by-step SOP with time estimates</p>
+          </div>
+        )}
+      </div>
+
+      {/* Save SOP Dialog */}
+      {showSaveDialog && output && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setShowSaveDialog(false)}>
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 shadow-2xl" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-[#111318] mb-4">Schedule SOP</h3>
+            <p className="text-sm text-[#636f88] mb-4">Set a start time to receive reminders for each step.</p>
+            <label className="block text-sm font-medium text-[#111318] mb-2">Start Date & Time</label>
+            <input
+              type="datetime-local"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+              className="w-full p-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
+            />
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowSaveDialog(false)}
+                className="flex-1 px-4 py-3 border border-gray-200 text-[#636f88] rounded-xl font-medium hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSaveSOP}
+                disabled={!startTime}
+                className="flex-1 px-4 py-3 bg-emerald-600 text-white rounded-xl font-medium hover:bg-emerald-700 disabled:opacity-50"
+              >
+                Save & Schedule
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

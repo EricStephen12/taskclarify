@@ -107,12 +107,42 @@ export interface FormattedNote {
   risks: Risk[];
 }
 
+export interface ExecutiveSummary {
+  problemStatement: string;
+  immediateActions: string[];
+  timeline: string;
+  owners: string[];
+}
+
+export interface TimePhasedPlan {
+  phase1: {
+    name: string;
+    description: string;
+    timeline: string;
+    owners: string[];
+  };
+  phase2: {
+    name: string;
+    description: string;
+    timeline: string;
+    owners: string[];
+  };
+  phase3: {
+    name: string;
+    description: string;
+    timeline: string;
+    owners: string[];
+  };
+}
+
 export interface SoftwareRequirementResult {
   detectedType: 'software';
   taskName: string;
   summary: string;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   estimatedComplexity: 'Simple' | 'Moderate' | 'Complex';
+  executiveSummary?: ExecutiveSummary;
+  timePhasedPlan?: TimePhasedPlan;
   functionalRequirements: FunctionalRequirement[];
   technicalRequirements: TechnicalRequirement[];
   userStories: UserStory[];
@@ -131,6 +161,8 @@ export interface BusinessTaskResult {
   summary: string;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   estimatedComplexity: 'Simple' | 'Moderate' | 'Complex';
+  executiveSummary?: ExecutiveSummary;
+  timePhasedPlan?: TimePhasedPlan;
   functionalRequirements: FunctionalRequirement[];
   technicalRequirements: TechnicalRequirement[];
   userStories: UserStory[];
@@ -149,6 +181,8 @@ export interface MarketingCampaignResult {
   summary: string;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   estimatedComplexity: 'Simple' | 'Moderate' | 'Complex';
+  executiveSummary?: ExecutiveSummary;
+  timePhasedPlan?: TimePhasedPlan;
   functionalRequirements: FunctionalRequirement[];
   technicalRequirements: TechnicalRequirement[];
   userStories: UserStory[];
@@ -167,6 +201,8 @@ export interface FinancialPlanningResult {
   summary: string;
   priority: 'HIGH' | 'MEDIUM' | 'LOW';
   estimatedComplexity: 'Simple' | 'Moderate' | 'Complex';
+  executiveSummary?: ExecutiveSummary;
+  timePhasedPlan?: TimePhasedPlan;
   functionalRequirements: FunctionalRequirement[];
   technicalRequirements: TechnicalRequirement[];
   userStories: UserStory[];
@@ -200,6 +236,8 @@ export interface SavedNote extends Omit<FormattedNote, 'unclearPoints'> {
   outOfScope: string[];
   dependencies: string[];
   risks: Risk[];
+  executiveSummary?: ExecutiveSummary;
+  timePhasedPlan?: TimePhasedPlan;
   // Personal plan specific fields
   budget?: Budget;
   executionSteps?: ExecutionStep[];
@@ -223,3 +261,130 @@ export const TASK_TYPE_LABELS: Record<TaskType, string> = {
   marketing: 'Marketing Campaign',
   financial: 'Financial Planning'
 };
+
+
+// ============================================
+// Dashboard Tab Types
+// ============================================
+export type DashboardTab = 'format' | 'blameproof' | 'minutes' | 'sop' | 'saved';
+
+// ============================================
+// SOP (Standard Operating Procedure) Types
+// ============================================
+export interface SOPStep {
+  id: string;
+  stepNumber: number;
+  title: string;
+  description: string;
+  estimatedDuration: number; // in minutes
+  tips: string[];
+  completed: boolean;
+  scheduledTime?: string; // ISO date string
+}
+
+export interface SOP {
+  id: string;
+  name: string;
+  summary: string;
+  totalDuration: number; // in minutes
+  steps: SOPStep[];
+  unclearPoints: string[];
+  createdAt: string;
+}
+
+export interface SOPReminder {
+  stepId: string;
+  scheduledTime: string; // ISO date string
+  triggered: boolean;
+  snoozedUntil?: string; // ISO date string
+}
+
+export type SOPStatus = 'scheduled' | 'in-progress' | 'completed' | 'archived';
+
+export interface SavedSOP extends SOP {
+  startTime: string; // ISO date string
+  status: SOPStatus;
+  currentStepIndex: number;
+  reminders: SOPReminder[];
+}
+
+
+// ============================================
+// Meeting Minutes Types
+// ============================================
+export interface DiscussionPoint {
+  topic: string;
+  summary: string;
+  participants: string[];
+}
+
+export interface MeetingActionItem {
+  id: string;
+  task: string;
+  owner: string;
+  deadline?: string;
+  status: 'pending' | 'completed';
+}
+
+export interface MeetingMinutes {
+  id: string;
+  title: string;
+  date: string;
+  attendees: string[];
+  agendaItems: string[];
+  discussionPoints: DiscussionPoint[];
+  actionItems: MeetingActionItem[];
+  decisions: string[];
+  nextSteps: string[];
+  rawTranscript: string;
+  createdAt: string;
+}
+
+export interface SavedMeetingMinutes extends MeetingMinutes {
+  savedAt: string;
+}
+
+
+// ============================================
+// Blame-Proof Docs Types (Enhanced for AI)
+// ============================================
+export interface ActionPlanSection {
+  immediateActions: string[];
+  shortTermActions: string[];
+  longTermActions: string[];
+  blockers: string[];
+}
+
+export interface TimelineEntry {
+  timestamp: string;
+  event: string;
+  actor: string;
+}
+
+export interface AgendaItem {
+  topic: string;
+  duration: string;
+  owner: string;
+}
+
+export interface MeetingAgendaSection {
+  title: string;
+  duration: string;
+  items: AgendaItem[];
+  preparation: string[];
+}
+
+export interface BlameProofContext {
+  issue: string;
+  urgency: 'low' | 'medium' | 'high' | 'critical';
+  stakeholders: string[];
+  timeline: string;
+}
+
+export interface BlameProofDocs {
+  paperTrailEmail: string;
+  actionPlan: ActionPlanSection;
+  timelineTracker: TimelineEntry[];
+  meetingAgenda: MeetingAgendaSection;
+  context: BlameProofContext;
+}
