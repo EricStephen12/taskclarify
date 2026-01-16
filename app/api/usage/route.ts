@@ -1,39 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
+import { getAuthenticatedUser } from '../auth-helper';
 
 const FREE_LIMIT = 5;
 
-function getSupabaseClient() {
-  const cookieStore = cookies();
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            // Ignore errors in server components
-          }
-        },
-      },
-    }
-  );
-}
-
 // GET - Check current usage
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+    const { user, supabase } = await getAuthenticatedUser(request);
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -83,11 +56,9 @@ export async function GET() {
 }
 
 // POST - Increment usage
-export async function POST() {
+export async function POST(request: NextRequest) {
   try {
-    const supabase = getSupabaseClient();
-    
-    const { data: { user } } = await supabase.auth.getUser();
+    const { user, supabase } = await getAuthenticatedUser(request);
     
     if (!user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

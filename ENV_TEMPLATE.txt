@@ -1,0 +1,10 @@
+# COPY THESE KEYS FROM YOUR MOBILE APP .env.local FILE
+# OR FROM YOUR SUPABASE DASHBOARD
+
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url_here
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+
+# PADDLE KEYS (For Payments)
+NEXT_PUBLIC_PADDLE_CLIENT_TOKEN=your_paddle_client_token
+NEXT_PUBLIC_PADDLE_PRICE_ID=your_paddle_price_id
+PADDLE_WEBHOOK_SECRET=your_webhook_secret

@@ -1,8 +1,9 @@
 'use client';
 
+import { createClient } from '@/lib/supabase';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase';
+import Header from '../Header';
 
 declare global {
   interface Window {
@@ -50,7 +51,7 @@ export default function Pricing() {
       window.location.href = '/login?redirect=/pricing';
       return;
     }
-    
+
     if (window.Paddle) {
       window.Paddle.Checkout.open({
         items: [{ priceId: process.env.NEXT_PUBLIC_PADDLE_PRICE_ID || '', quantity: 1 }],
@@ -60,24 +61,8 @@ export default function Pricing() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f6f6f8] overflow-x-hidden">
-      {/* Nav */}
-      <header className="fixed top-0 z-50 w-full border-b border-gray-100 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#185adc]/10 text-[#185adc]">
-              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"/>
-              </svg>
-            </div>
-            <span className="text-lg font-bold tracking-tight text-[#111318]">TaskClarify</span>
-          </Link>
-          <div className="flex items-center gap-3 sm:gap-4">
-            <Link href="/login" className="text-sm text-[#636f88] hover:text-[#111318] transition">Login</Link>
-            <Link href="/signup" className="px-4 py-2.5 sm:py-2 bg-[#185adc] text-white rounded-lg text-sm font-medium hover:bg-[#1244a8] transition min-h-[44px] flex items-center">Get Started</Link>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#FDFBF7] overflow-x-hidden">
+      <Header isAuthenticated={!!userId} />
 
       <main className="pt-24 sm:pt-32 pb-16 sm:pb-20 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
@@ -88,64 +73,64 @@ export default function Pricing() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto">
             {/* Free Plan */}
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 sm:p-8 shadow-sm">
-              <div className="text-lg font-semibold text-[#111318] mb-2">Free</div>
-              <div className="text-3xl sm:text-4xl font-bold text-[#111318] mb-2">
-                $0<span className="text-base sm:text-lg text-[#636f88] font-normal">/month</span>
+            <div className="bg-white rounded-2xl border border-[#E5E0D5] p-6 sm:p-8 shadow-sm">
+              <div className="text-lg font-semibold text-[#1A2E28] mb-2">Free</div>
+              <div className="text-3xl sm:text-4xl font-bold text-[#1A2E28] mb-2">
+                $0<span className="text-base sm:text-lg text-[#5C6B64] font-normal">/month</span>
               </div>
-              <p className="text-[#636f88] mb-6">Perfect for trying out TaskClarify</p>
-              
+              <p className="text-[#5C6B64] mb-6">Perfect for trying out TaskClarify</p>
+
               <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-2 text-[#111318]">
-                  <span className="text-green-500">✓</span> 5 formats per month
+                <li className="flex items-center gap-2 text-[#1A2E28]">
+                  <span className="text-[#2E5C55]">✓</span> 5 formats per month
                 </li>
-                <li className="flex items-center gap-2 text-[#111318]">
-                  <span className="text-green-500">✓</span> Save unlimited notes
+                <li className="flex items-center gap-2 text-[#1A2E28]">
+                  <span className="text-[#2E5C55]">✓</span> Save unlimited notes
                 </li>
-                <li className="flex items-center gap-2 text-[#111318]">
-                  <span className="text-green-500">✓</span> Voice input
+                <li className="flex items-center gap-2 text-[#1A2E28]">
+                  <span className="text-[#2E5C55]">✓</span> Voice input
                 </li>
-                <li className="flex items-center gap-2 text-[#111318]">
-                  <span className="text-green-500">✓</span> Export to Markdown
+                <li className="flex items-center gap-2 text-[#1A2E28]">
+                  <span className="text-[#2E5C55]">✓</span> Export to Markdown
                 </li>
               </ul>
 
-              <Link href="/signup" className="block w-full py-3.5 sm:py-3 text-center border border-gray-300 text-[#111318] font-medium rounded-xl hover:bg-gray-50 transition min-h-[44px] flex items-center justify-center">
-                Get Started Free
+              <Link href="/signup" className="block w-full py-3.5 sm:py-3 text-center border border-[#E5E0D5] text-[#1A2E28] font-medium rounded-xl hover:bg-[#FDFBF7] transition min-h-[44px] flex items-center justify-center">
+                Download Free
               </Link>
             </div>
 
             {/* Pro Plan */}
-            <div className="bg-[#185adc] rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl shadow-[#185adc]/25">
-              <div className="absolute top-4 right-4 bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
+            <div className="bg-[#1A2E28] rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl shadow-[#2E5C55]/20">
+              <div className="absolute top-4 right-4 bg-[#2E5C55] px-3 py-1 rounded-full text-sm font-medium border border-[#3E6E65]">
                 Popular
               </div>
               <div className="text-lg font-semibold mb-2">Pro</div>
               <div className="text-3xl sm:text-4xl font-bold mb-2">
-                $9<span className="text-base sm:text-lg opacity-80 font-normal">/month</span>
+                $9.99<span className="text-base sm:text-lg opacity-80 font-normal">/month</span>
               </div>
-              <p className="opacity-90 mb-6">For professionals who need more</p>
-              
-              <ul className="space-y-3 mb-8">
+              <p className="opacity-90 mb-6 font-light">Unlock the full power of TaskClarify</p>
+
+              <ul className="space-y-3 mb-8 text-[#E5E0D5]">
                 <li className="flex items-center gap-2">
-                  <span className="text-green-300">✓</span> Unlimited formats
+                  <span className="text-[#4ADE80]">✓</span> Unlimited AI Tasks (SOPs, Plans, Minutes)
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-300">✓</span> Save unlimited notes
+                  <span className="text-[#4ADE80]">✓</span> "Blame-Proof" Documentation
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-300">✓</span> Voice input
+                  <span className="text-[#4ADE80]">✓</span> Unlimited Voice Transcriptions
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-300">✓</span> Priority support
+                  <span className="text-[#4ADE80]">✓</span> Priority Processing (Llama 3 70B)
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-green-300">✓</span> Early access to features
+                  <span className="text-[#4ADE80]">✓</span> Early access to new features
                 </li>
               </ul>
 
-              <button onClick={handleCheckout} className="block w-full py-3.5 sm:py-3 text-center bg-white text-[#185adc] font-medium rounded-xl hover:bg-gray-100 transition min-h-[44px]">
-                Upgrade to Pro
+              <button onClick={handleCheckout} className="block w-full py-3.5 sm:py-3 text-center bg-[#2E5C55] text-white font-bold rounded-xl hover:bg-[#346b63] transition min-h-[44px] shadow-lg border border-white/10">
+                Upgrade Now
               </button>
             </div>
           </div>

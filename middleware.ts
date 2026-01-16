@@ -1,13 +1,27 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr';
+import { NextResponse, type NextRequest } from 'next/server';
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
+  console.log("Middleware checking Env Vars:");
+  console.log("URL:", process.env.NEXT_PUBLIC_SUPABASE_URL ? "Exists" : "MISSING");
+  console.log("KEY:", process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "Exists" : "MISSING");
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.error("❌ CRITICAL ERROR: Supabase Keys Missing in Middleware!");
+    console.error("NEXT_PUBLIC_SUPABASE_URL:", supabaseUrl ? "Set" : "MISSING");
+    console.error("NEXT_PUBLIC_SUPABASE_ANON_KEY:", supabaseKey ? "Set" : "MISSING");
+    return NextResponse.next();
+  }
+
   // Create a Supabase client configured to use cookies
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseKey,
     {
       cookies: {
         getAll() {
@@ -41,7 +55,7 @@ export async function middleware(request: NextRequest) {
   // If the user is logged in and trying to access auth pages, redirect to dashboard
   const authPages = ['/login', '/signup']
   const isAuthPage = authPages.some(page => pathname.startsWith(page))
-  
+
   if (isAuthPage && session) {
     const url = request.nextUrl.clone()
     url.pathname = '/dashboard'

@@ -6,9 +6,18 @@ import {
   FormattedResult,
   ErrorResponse 
 } from '@/types';
+import { getAuthenticatedUser } from '../auth-helper';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication (optional - can make public or require auth)
+    // For now, making it optional to maintain backward compatibility
+    // Uncomment to require auth:
+    // const { user } = await getAuthenticatedUser(request);
+    // if (!user) {
+    //   return NextResponse.json<ErrorResponse>({ error: 'Unauthorized' }, { status: 401 });
+    // }
+
     const { notes, taskType } = await request.json();
     
     if (!notes || notes.trim() === '') {

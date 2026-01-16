@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SOP, SOPStep, ErrorResponse } from '@/types';
+import { getAuthenticatedUser } from '../auth-helper';
 
 export async function POST(request: NextRequest) {
   try {
+    // Authentication check can be added here if needed
+    // const { user } = await getAuthenticatedUser(request);
+
     const { notes } = await request.json();
     
     if (!notes || notes.trim() === '') {

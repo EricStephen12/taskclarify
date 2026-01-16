@@ -75,3 +75,102 @@ create policy "Users can insert own usage"
 create policy "Users can update own usage"
   on usage_tracking for update
   using (auth.uid() = user_id);
+
+
+-- Conversations table (for mobile app chat history)
+create table conversations (
+  id text primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  title text not null,
+  mode text default 'clarify',
+  messages jsonb default '[]'::jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  updated_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS
+alter table conversations enable row level security;
+
+-- Policies
+create policy "Users can view own conversations"
+  on conversations for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own conversations"
+  on conversations for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own conversations"
+  on conversations for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own conversations"
+  on conversations for delete
+  using (auth.uid() = user_id);
+
+
+-- Saved Notes table (for mobile app saved documents)
+create table saved_notes (
+  id text primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  task_name text not null,
+  detected_type text not null,
+  summary text,
+  document_data jsonb not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS
+alter table saved_notes enable row level security;
+
+-- Policies
+create policy "Users can view own saved_notes"
+  on saved_notes for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own saved_notes"
+  on saved_notes for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own saved_notes"
+  on saved_notes for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own saved_notes"
+  on saved_notes for delete
+  using (auth.uid() = user_id);
+
+-- Saved SOPs table (for mobile app SOPs with scheduling)
+create table saved_sops (
+  id text primary key,
+  user_id uuid references auth.users(id) on delete cascade not null,
+  name text not null,
+  summary text,
+  total_duration int default 0,
+  steps jsonb default '[]'::jsonb,
+  status text default 'scheduled',
+  start_time timestamp with time zone,
+  current_step_index int default 0,
+  reminders jsonb default '[]'::jsonb,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Enable RLS
+alter table saved_sops enable row level security;
+
+-- Policies
+create policy "Users can view own saved_sops"
+  on saved_sops for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert own saved_sops"
+  on saved_sops for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update own saved_sops"
+  on saved_sops for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete own saved_sops"
+  on saved_sops for delete
+  using (auth.uid() = user_id);

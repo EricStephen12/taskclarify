@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BlameProofDocs, ErrorResponse } from '@/types';
+import { getAuthenticatedUser } from '../auth-helper';
 
 export async function POST(req: NextRequest) {
   try {
+    // Authentication check can be added here if needed
+    // const { user } = await getAuthenticatedUser(req);
+
     const { input } = await req.json();
     
     if (!input || typeof input !== 'string' || input.trim() === '') {
